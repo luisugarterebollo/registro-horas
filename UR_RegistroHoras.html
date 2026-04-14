@@ -117,8 +117,8 @@ const CLIENT_ID  = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
 const TENANT_ID  = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
 const DRIVE_ID   = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
 const SITE_ID    = "ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef";
-const FILE_PATH  = "Documentos compartidos/Gestión del conocimiento/Time report antiguos/UR_Registro_Horas_v2_2.xlsx";
-const TABLE_NAME = "Horas";
+const FILE_PATH  = "Documentos compartidos/Gestión del conocimiento/Time report antiguos/TR 2026_UR.xlsx";
+const TABLE_NAME = "TimeReport";
 const REDIRECT_URI = "https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
 const SCOPES = ["https://graph.microsoft.com/Files.ReadWrite.All","https://graph.microsoft.com/Sites.ReadWrite.All","https://graph.microsoft.com/User.Read"];
 
@@ -319,7 +319,7 @@ async function guardarEnSharePoint(){
     let ok=0,fail=0;
     for(const r of rows){
       const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;const ig=IGUALAS.has(r.cliente)?"Sí":"No";
-      const body={values:[[fecha,ab,r.cliente,"",r.tarea,r.descripcion,r.minutos,t,imp,ig,"No",""]]};
+      const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,"No"]]};
       const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
       if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
     }
