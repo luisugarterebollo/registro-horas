@@ -116,6 +116,7 @@ input[type=number]{text-align:center;font-weight:500}
 const CLIENT_ID  = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
 const TENANT_ID  = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
 const DRIVE_ID   = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
+const SITE_ID    = "ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef";
 const FILE_PATH  = "Documentos compartidos/Gestión del conocimiento/Claude Time Report/UR_Registro_Horas_v2_2.xlsx";
 const TABLE_NAME = "Horas";
 const REDIRECT_URI = "https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
@@ -185,7 +186,7 @@ async function getToken(){
 }
 async function leerFechas(token,nombre){
   try{
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${encodeURIComponent(FILE_PATH)}`,{headers:{Authorization:`Bearer ${token}`}});
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FILE_PATH.split("/").map(s=>encodeURIComponent(s)).join("/")}`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r1.ok)return[];
     const item=await r1.json();
     const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
@@ -310,7 +311,7 @@ async function guardarEnSharePoint(){
   const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${encodeURIComponent(FILE_PATH)}`,{headers:{Authorization:`Bearer ${token}`}});
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_ID}/drives/${DRIVE_ID}/root:/${FILE_PATH.split("/").map(s=>encodeURIComponent(s)).join("/")}`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r1.ok)throw new Error("No se pudo acceder al archivo. Verifica que existe en SharePoint.");
     const item=await r1.json();const itemId=item.id;
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
