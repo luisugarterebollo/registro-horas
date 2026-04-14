@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U&R Abogados — Registro de Horas</title>
+<script src="https://unpkg.com/@azure/msal-browser@3.5.0/lib/msal-browser.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f1;color:#1a1a1a;font-size:13px;min-height:100vh}
+.topbar{background:#1a1a1a;padding:10px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{color:#fff;font-size:13px;font-weight:500}
+.topbar-user{color:#888;font-size:11px}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 40px)}
+.login-card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:2rem;max-width:360px;width:90%;text-align:center}
+.login-card h1{font-size:18px;font-weight:500;margin-bottom:8px}
+.login-card p{font-size:12px;color:#666;margin-bottom:1.5rem;line-height:1.5}
+.btn-login{width:100%;padding:10px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-login:hover{background:#333}
+.btn-login:disabled{opacity:0.5;cursor:not-allowed}
+#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 40px);gap:12px}
+.loading-text{font-size:13px;color:#666}
+.spinner-lg{width:24px;height:24px;border:2px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin .7s linear infinite}
+.wrap{padding:1rem 1.25rem;max-width:980px;margin:0 auto}
+.day-header{font-size:12px;color:#666;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:0.5px solid #ddd}
+.day-header strong{color:#1a1a1a}
+.alert{background:#fef9ec;border:0.5px solid #f5a623;border-radius:8px;padding:10px 14px;font-size:12px;color:#b7640a;margin-bottom:1rem;line-height:1.5}
+.alert-success{background:#eaf3de;border:0.5px solid #639922;border-radius:8px;padding:10px 14px;font-size:12px;color:#3b6d11;margin-bottom:1rem;line-height:1.5}
+.alert-danger{background:#fdf0ef;border:0.5px solid #e8a09d;border-radius:8px;padding:10px 14px;font-size:12px;color:#922;margin-bottom:1rem;line-height:1.5}
+.pending-days{background:#fff3cd;border:0.5px solid #f5a623;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem}
+.pending-days h3{font-size:13px;font-weight:500;color:#b7640a;margin-bottom:6px}
+.pending-days p{font-size:12px;color:#8a5700;line-height:1.5}
+.days-list{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.day-chip{background:#fff;border:0.5px solid #f5a623;border-radius:20px;padding:3px 10px;font-size:11px;color:#b7640a}
+.block{background:#fff;border:0.5px solid #ddd;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
+.block-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#f7f7f5;border-bottom:0.5px solid #ddd}
+.block-title{font-size:12px;font-weight:500}
+.block-mins{font-size:11px;color:#888}
+.block-mins b{color:#1a1a1a}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead th{font-size:10px;font-weight:500;color:#888;text-align:left;padding:5px 8px;border-bottom:0.5px solid #ddd;background:#f7f7f5;white-space:nowrap}
+col.tc{width:180px}col.tt{width:180px}col.tm{width:80px}col.td{width:auto}col.tx{width:28px}
+.row-main td{padding:6px 8px 2px;vertical-align:middle;border-bottom:none}
+.row-desc td{padding:0 8px 6px;vertical-align:top;border-bottom:0.5px solid #eee}
+.row-main.pending,.row-desc.pending{background:#fffbf0}
+select,input[type=number]{font-size:11px;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:3px 5px;color:#1a1a1a;font-family:inherit;width:100%}
+select:hover,input:hover{border-color:#ccc}
+select:focus,input:focus{outline:none;border-color:#999;background:#f9f9f7}
+input[type=number]{text-align:center;font-weight:500}
+.desc-input{font-size:11px;color:#555;width:100%;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:2px 5px;font-family:inherit;resize:none;line-height:1.45}
+.desc-input:hover{border-color:#ccc}
+.desc-input:focus{outline:none;border-color:#999;background:#f9f9f7;color:#1a1a1a}
+.del-btn{background:none;border:none;cursor:pointer;color:#bbb;font-size:13px;padding:2px 4px;border-radius:3px;line-height:1;display:block;margin:auto}
+.del-btn:hover{color:#c0392b;background:#fdf0ef}
+.badge-p{font-size:9px;background:#fef9ec;color:#b7640a;border:0.5px solid #f5a623;border-radius:3px;padding:1px 4px;margin-left:4px}
+.add-btn{display:block;width:calc(100% - 28px);margin:7px 14px;font-size:11px;color:#888;background:none;border:0.5px dashed #ccc;border-radius:6px;padding:5px 10px;cursor:pointer;text-align:left}
+.add-btn:hover{color:#1a1a1a;border-color:#999}
+.summary-wrap{background:#f7f7f5;border:0.5px solid #ddd;border-radius:12px;padding:0.875rem 1.125rem;margin-bottom:1rem}
+.sum-label{font-size:10px;font-weight:500;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.sum-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:0.5px solid #eee}
+.sum-row:last-child{border-bottom:none;font-weight:500;padding-top:5px}
+.confirm-btn{width:100%;padding:10px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.confirm-btn:hover{background:#333}
+.confirm-btn:disabled{opacity:0.4;cursor:not-allowed;background:#888}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:999}
+.modal{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:1.25rem;max-width:520px;width:92%;max-height:85vh;overflow-y:auto}
+.modal h2{font-size:14px;font-weight:500;margin-bottom:1rem}
+.msec-title{font-size:10px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.04em;margin:1rem 0 5px}
+.modal table{font-size:12px;width:100%;table-layout:auto}
+.modal td{padding:3px 8px}
+.modal tr.total-row td{font-weight:500;border-top:0.5px solid #ddd;padding-top:6px}
+.impact{background:#eaf2fb;border:0.5px solid #b5d4f4;border-radius:8px;padding:9px 12px;font-size:12px;color:#185fa5;margin:0.875rem 0 0.75rem;line-height:1.5}
+.modal-btn{width:100%;padding:9px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-top:8px}
+.modal-btn:hover{background:#333}
+.modal-btn:disabled{opacity:0.5;cursor:not-allowed}
+.modal-btn-sec{width:100%;padding:8px;background:none;border:0.5px solid #ccc;border-radius:8px;font-size:12px;cursor:pointer;margin-top:8px;color:#1a1a1a}
+.modal-btn-sec:hover{background:#f5f5f5}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #555;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-title">U&R Abogados · Registro de Horas</span>
+  <span class="topbar-user" id="topbar-user"></span>
+</div>
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Registro de Horas</h1>
+    <p>Inicia sesión con tu cuenta de Microsoft 365 del despacho para registrar tus horas y guardarlas en SharePoint.</p>
+    <button class="btn-login" id="btn-login" onclick="iniciarSesion()">Iniciar sesión con Microsoft</button>
+    <p id="login-error" style="color:#c00;font-size:11px;margin-top:12px;display:none"></p>
+  </div>
+</div>
+<div id="loading-screen">
+  <div class="spinner-lg"></div>
+  <div class="loading-text" id="loading-text">Comprobando días registrados...</div>
+</div>
+<div id="app-screen" style="display:none">
+  <div class="wrap">
+    <div class="day-header" id="day-header"></div>
+    <div id="pending-days-section"></div>
+    <div id="top-alerts"></div>
+    <div id="blocks"></div>
+    <div class="summary-wrap">
+      <div class="sum-label">Resumen en tiempo real</div>
+      <div id="sum-rows"></div>
+    </div>
+    <button class="confirm-btn" id="btn-confirm" onclick="abrirResumen()">Confirmar horas del día</button>
+  </div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+<script>
+const CLIENT_ID  = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
+const TENANT_ID  = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
+const DRIVE_ID   = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
+const FILE_PATH  = "Documentos compartidos/Gestión del conocimiento/Claude Time Report/UR_Registro_Horas_v2_2.xlsx";
+const TABLE_NAME = "Horas";
+const REDIRECT_URI = "https://ugarterebolloabogados.sharepoint.com/sites/ugarterebolloabogados/documentos%20compartidos/gesti%c3%b3n%20del%20conocimiento/claude%20time%20report/ur_registrohoras.html";
+const SCOPES = ["https://graph.microsoft.com/Files.ReadWrite.All","https://graph.microsoft.com/Sites.ReadWrite.All","https://graph.microsoft.com/User.Read"];
+
+const msalConfig = {
+  auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:REDIRECT_URI },
+  cache:{ cacheLocation:"localStorage", storeAuthStateInCookie:true }
+};
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let currentUser = null;
+
+const EMAILS_ABOGADOS = {
+  "luis@ugarterebolloabogados.com":"Luis Ugarte Rebollo",
+  "c.pastrana@ugarterebolloabogados.com":"Carlos Pastrana",
+  "javier@ugarterebolloabogados.com":"Javier Parejas Valls",
+  "m.rico@ugarterebolloabogados.com":"Mafer Rico",
+  "m.hernandez@ugarterebolloabogados.com":"Miriam Hernández Retortillo",
+  "m.alcantarilla@ugarterebolloabogados.com":"Mariano Alcantarilla de Lamo",
+  "contabilidad@ugarterebolloabogados.com":"Susana Carracedo"
+};
+const TARIFAS = {"Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,"Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,"Susana Carracedo":60};
+const CLIENTES = ["— pendiente —","A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
+const TAREAS = ["Análisis, consulta, revisión e investigación tributaria / mercantil","Redacción de escritos y documentos","Reuniones y llamadas (Teams / presencial)","Coordinación, gestión y correspondencia con cliente","Desarrollo de negocio y gestión del despacho"];
+const IGUALAS = new Set(["Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Casacuberta","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
+const SPECIAL = {PROSOCAM:225,"Javier Arroyo":225,Castañeda:275};
+
+const data = [
+  {bid:"b1",label:"Honorarios facturables",color:"#185fa5",rows:[
+    {id:"e1",c:"Grupo Argis",t:TAREAS[3],m:20,d:"Selaya - Finance Documents (2 emails) — RV equipo + RV Pastrana con adjunto",p:false},
+    {id:"e2",c:"Javier Arroyo",t:TAREAS[0],m:75,d:"Notificación / préstamos / libros / tasación + Inspección Javier (4 emails) — análisis notificación electrónica, préstamos socios, libros, tasación",p:false},
+    {id:"e3",c:"Grupo Pryconsa",t:TAREAS[1],m:45,d:"Percepciones dinerarias trabajadores portugueses - Isla Canela (1 email + adjunto) — CDI hispano-portugués, certificados residencia fiscal",p:false},
+    {id:"e4",c:"VB Global Group",t:TAREAS[3],m:30,d:"VIAJABIEN - Propuesta aportación a Holding (2 emails) — kick-off Fase I/II + seguimiento CCAA",p:false},
+    {id:"e5",c:"BC Nonwovens",t:TAREAS[1],m:45,d:"REA VIFERME IS 2018-2021 + Pago Fraccionado 1P-2026 (2 emails + adjunto) — cálculo pago fraccionado IS grupo fiscal 5/26",p:false},
+    {id:"e6",c:"Grupo Argis",t:TAREAS[0],m:60,d:"Financiación Torre Sevilla (2 emails) — comentarios fiscales mark-up CMS + instrucciones al equipo",p:false},
+  ]},
+  {bid:"b2",label:"Igualas",color:"#0f6e56",rows:[
+    {id:"e7",c:"Grupo Casacuberta",t:TAREAS[1],m:60,d:"CAVISL: comunicación no gran empresa 2026 (1 email + adjunto) — análisis IVA art. 20.Uno.18º LIVA, Modelo 303",p:false},
+    {id:"e8",c:"Grupo Casacuberta",t:TAREAS[0],m:60,d:"Inspección IS 2021-2024 exención reinversión (1 email + adjunto) — análisis sanciones, reducción conformidad pronto pago",p:false},
+  ]},
+  {bid:"b3",label:"Pendiente / Interno / Otros",color:"#b7640a",rows:[
+    {id:"e9",c:"— pendiente —",t:TAREAS[3],m:10,d:"PVX Santa Anna SL: consulta tributación venta local — email interno al equipo (asigna cliente)",p:true},
+    {id:"e10",c:"— pendiente —",t:TAREAS[3],m:10,d:"Título familia numerosa — destinatarios sin cliente identificado (asigna o elimina si personal)",p:true},
+    {id:"e11",c:"— pendiente —",t:TAREAS[3],m:5,d:"Notificación TEAR Jorge Calvo — cliente no identificado (asigna)",p:true},
+    {id:"e12",c:"Interno",t:TAREAS[4],m:5,d:"Borradores impuestos UR 1ºT — respuesta muy corta a Susana",p:false},
+  ]}
+];
+
+let rc=50;
+function esLaborable(d){return d.getDay()>=1&&d.getDay()<=5;}
+function diasPendientes(reg){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const s=new Set(reg);const lista=[];
+  for(let i=1;i<=30;i++){
+    const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+    if(!esLaborable(d))continue;
+    const k=d.toISOString().split("T")[0];
+    if(s.has(k))break;
+    lista.push(d);if(lista.length>=10)break;
+  }
+  return lista.reverse();
+}
+async function getToken(){
+  if(!currentUser)throw new Error("No hay sesión activa");
+  try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}
+  catch(e){const r=await msalInstance.acquireTokenPopup({scopes:SCOPES,account:currentUser});return r.accessToken;}
+}
+async function leerFechas(token,nombre){
+  try{
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${encodeURIComponent(FILE_PATH)}`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)return[];
+    const item=await r1.json();
+    const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r2.ok)return[];
+    const d2=await r2.json();
+    const fechas=new Set();
+    for(const row of d2.value||[]){
+      const v=row.values[0];
+      if((v[1]||"").toString().toLowerCase().includes(nombre.split(" ")[0].toLowerCase())){
+        const f=(v[0]||"").toString().substring(0,10);if(f)fechas.add(f);
+      }
+    }
+    return[...fechas];
+  }catch(e){return[];}
+}
+function mostrarPendientes(dias){
+  const sec=document.getElementById("pending-days-section");
+  if(!dias||dias.length===0){sec.innerHTML="";return;}
+  const MM=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const chips=dias.map(d=>`<span class="day-chip">${d.getDate()} ${MM[d.getMonth()]}</span>`).join("");
+  const msg=dias.length>=3?`<strong>Atención:</strong> llevas <strong>${dias.length} días laborables sin registrar</strong> horas.`:`Tienes <strong>${dias.length} día${dias.length>1?"s":""} laborable${dias.length>1?"s":""}</strong> sin registrar.`;
+  sec.innerHTML=`<div class="pending-days"><h3>Días pendientes</h3><p>${msg}</p><div class="days-list">${chips}</div></div>`;
+}
+async function iniciarSesion(){
+  const btn=document.getElementById("btn-login");
+  const err=document.getElementById("login-error");
+  btn.disabled=true;btn.textContent="Conectando...";err.style.display="none";
+  try{
+    await msalInstance.initialize();
+    const resp=await msalInstance.loginPopup({scopes:SCOPES});
+    currentUser=resp.account;
+    const email=currentUser.username.toLowerCase();
+    const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
+    currentUser.nombreDespacho=nombre;
+    document.getElementById("topbar-user").textContent=nombre;
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("loading-screen").style.display="flex";
+    const token=await getToken();
+    const fechas=await leerFechas(token,nombre);
+    const pendientes=diasPendientes(fechas);
+    document.getElementById("loading-screen").style.display="none";
+    document.getElementById("app-screen").style.display="block";
+    const hoy=new Date();
+    const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    document.getElementById("day-header").innerHTML=`<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong> · ${nombre} · ${getTarifa(null,nombre)} €/h`;
+    mostrarPendientes(pendientes);
+    render();
+  }catch(e){
+    btn.disabled=false;btn.textContent="Iniciar sesión con Microsoft";
+    err.style.display="block";err.textContent="Error: "+e.message;
+  }
+}
+function getTarifa(c,a){const ab=a||(currentUser?currentUser.nombreDespacho:"");if(c&&SPECIAL[c])return SPECIAL[c];return TARIFAS[ab]||450;}
+function cOpts(sel){return CLIENTES.map(c=>`<option value="${c}"${sel===c?" selected":""}>${c}</option>`).join("")}
+function tOpts(sel){return TAREAS.map(t=>`<option value="${t}"${sel===t?" selected":""}>${t}</option>`).join("")}
+function rowsHtml(bid,rows){
+  return rows.map(r=>{
+    const pc=r.p?"pending":"";const badge=r.p?`<span class="badge-p">pendiente</span>`:"";
+    return `<tr class="row-main ${pc}" id="rm-${r.id}"><td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}</td><td><select onchange="refresh()">${tOpts(r.t)}</select></td><td><input type="number" min="0" max="600" value="${r.m}" oninput="refresh()"></td><td></td><td><button class="del-btn" onclick="delRow('${bid}','${r.id}')">×</button></td></tr>
+    <tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="4" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;
+  }).join("");
+}
+function blockHtml(b){
+  return `<div class="block"><div class="block-header"><span class="block-title" style="color:${b.color}">${b.label}</span><span class="block-mins" id="bm-${b.bid}"></span></div>
+  <table><colgroup><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
+  <thead><tr><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
+  <tbody id="tb-${b.bid}">${rowsHtml(b.bid,b.rows)}</tbody></table>
+  <button class="add-btn" onclick="addRow('${b.bid}')">+ Añadir fila</button></div>`;
+}
+function render(){
+  document.getElementById("blocks").innerHTML=data.map(blockHtml).join("");
+  const p=data.flatMap(b=>b.rows).filter(r=>r.p).length;
+  document.getElementById("top-alerts").innerHTML=p>0?`<div class="alert">${p} entrada${p>1?"s":""} marcadas como <strong>— pendiente —</strong> requieren asignación de cliente.</div>`:"";
+  refresh();
+}
+function getMins(bid){const tb=document.getElementById("tb-"+bid);if(!tb)return 0;return Array.from(tb.querySelectorAll("input[type=number]")).reduce((s,i)=>s+(parseInt(i.value)||0),0);}
+function refresh(){
+  data.forEach(b=>{const m=getMins(b.bid);const el=document.getElementById("bm-"+b.bid);if(el)el.innerHTML=`<b>${Math.floor(m/60)}h ${m%60}min</b>`;});
+  const map={};
+  data.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const c=tr.querySelector("select").value;const m=parseInt(tr.querySelector("input[type=number]").value)||0;map[c]=(map[c]||0)+m;});});
+  const total=Object.values(map).reduce((s,v)=>s+v,0);
+  let html=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,m])=>`<div class="sum-row"><span>${c}</span><span>${Math.floor(m/60)}h ${m%60}min</span></div>`).join("");
+  html+=`<div class="sum-row"><span>Total</span><span>${Math.floor(total/60)}h ${total%60}min</span></div>`;
+  document.getElementById("sum-rows").innerHTML=html;
+}
+function onC(bid,rid,val){
+  const b=data.find(x=>x.bid===bid);if(!b)return;const r=b.rows.find(x=>x.id===rid);if(!r)return;
+  r.p=(val==="— pendiente —");
+  ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");});
+  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display=r.p?"":"none";refresh();
+}
+function delRow(bid,rid){const b=data.find(x=>x.bid===bid);if(!b)return;b.rows=b.rows.filter(x=>x.id!==rid);["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(el)el.remove();});refresh();}
+function addRow(bid){const b=data.find(x=>x.bid===bid);if(!b)return;const id="e"+rc++;const nr={id,c:"— pendiente —",t:TAREAS[3],m:0,d:"",p:true};b.rows.push(nr);const tb=document.getElementById("tb-"+bid);const tmp=document.createElement("tbody");tmp.innerHTML=rowsHtml(bid,[nr]);Array.from(tmp.children).forEach(tr=>tb.appendChild(tr));refresh();}
+function getRows(){
+  const rows=[];
+  data.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");const rdesc=tr.nextElementSibling;const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";rows.push({cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});});});
+  return rows;
+}
+function abrirResumen(){
+  const rows=getRows();
+  const sinMin=rows.filter(r=>r.minutos===0);const sinC=rows.filter(r=>r.cliente==="— pendiente —"&&r.minutos>0);
+  const fact=rows.filter(r=>r.minutos>0&&r.cliente!=="Interno"&&r.cliente!=="— pendiente —"&&!IGUALAS.has(r.cliente));
+  const ig=rows.filter(r=>r.minutos>0&&IGUALAS.has(r.cliente));const otros=rows.filter(r=>r.minutos>0&&r.cliente==="Interno");
+  function grp(arr){const m={};arr.forEach(r=>{m[r.cliente]=(m[r.cliente]||0)+r.minutos;});return m;}
+  const fg=grp(fact),ig2=grp(ig),og=grp(otros);const ab=currentUser?currentUser.nombreDespacho:"—";
+  let ftotal=0;
+  let fhtml=Object.entries(fg).map(([c,m])=>{const t=getTarifa(c,ab),imp=(m/60)*t;ftotal+=imp;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;color:#888">${t}€/h</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
+  fhtml+=`<tr class="total-row"><td colspan="3">Total facturable</td><td style="text-align:right">${Math.round(ftotal).toLocaleString("es-ES")}€</td></tr>`;
+  const ihtml=Object.entries(ig2).map(([c,m])=>{const t=getTarifa(null,ab),imp=(m/60)*t;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
+  const ohtml=Object.entries(og).map(([c,m])=>`<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td></tr>`).join("");
+  let warns="";if(sinMin.length)warns+=`<div class="alert">${sinMin.length} entrada${sinMin.length>1?"s":""} con 0 minutos.</div>`;if(sinC.length)warns+=`<div class="alert">${sinC.length} entrada${sinC.length>1?"s":""} sin cliente.</div>`;
+  document.getElementById("modal").innerHTML=`${warns}<h2>Resumen — ${new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</h2>
+  <div class="msec-title">Honorarios facturables</div><table>${fhtml||"<tr><td style='color:#888'>Sin entradas facturables</td></tr>"}</table>
+  ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
+  <div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
+  <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
+  <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
+  document.getElementById("overlay").style.display="flex";
+}
+async function guardarEnSharePoint(){
+  const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
+  try{
+    const token=await getToken();
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${encodeURIComponent(FILE_PATH)}`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)throw new Error("No se pudo acceder al archivo. Verifica que existe en SharePoint.");
+    const item=await r1.json();const itemId=item.id;
+    const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
+    const fecha=new Date().toISOString().split("T")[0];const ab=currentUser.nombreDespacho;
+    let ok=0,fail=0;
+    for(const r of rows){
+      const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;const ig=IGUALAS.has(r.cliente)?"Sí":"No";
+      const body={values:[[fecha,ab,r.cliente,"",r.tarea,r.descripcion,r.minutos,t,imp,ig,"No",""]]};
+      const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
+    }
+    if(fail===0){
+      document.getElementById("modal").innerHTML=`<div class="alert-success"><strong>${ok} fila${ok>1?"s":""} guardada${ok>1?"s":""} correctamente en SharePoint.</strong><br><span style="font-size:11px;margin-top:4px;display:block">Registradas en UR_Registro_Horas_v2_2.xlsx</span></div><button class="modal-btn-sec" onclick="cerrarYBloquear()">Cerrar</button>`;
+    }else{
+      document.getElementById("modal").innerHTML=`<div class="alert-danger">${ok} filas guardadas, ${fail} con error. Pulsa F12 para detalles.</div><button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar</button>`;
+    }
+  }catch(e){btn.disabled=false;btn.innerHTML="Guardar en SharePoint";document.getElementById("modal").insertAdjacentHTML("afterbegin",`<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);}
+}
+function cerrarYBloquear(){document.getElementById("overlay").style.display="none";const cb=document.getElementById("btn-confirm");cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";}
+window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
+</script>
+</body>
+</html>
