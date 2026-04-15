@@ -156,7 +156,9 @@ const TARIFAS = {
   "Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,
   "Susana Carracedo":60
 };
-const CLIENTES = ["— pendiente —","A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Marko Rajamaa","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
+// Lista de clientes — se carga dinámicamente desde SharePoint. Lista de respaldo:
+const CLIENTES_FALLBACK = ["— pendiente —","A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Marko Rajamaa","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
+let CLIENTES = CLIENTES_FALLBACK;
 const TAREAS = [
   "Análisis, consulta, revisión e investigación tributaria / mercantil",
   "Redacción de escritos y documentos",
@@ -207,7 +209,7 @@ let data = [
 async function getToken(){
   if(!currentUser)throw new Error("No hay sesión activa");
   try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}
-  catch(e){const r=await msalInstance.acquireTokenPopup({scopes:SCOPES,account:currentUser});return r.accessToken;}
+  catch(e){await msalInstance.acquireTokenRedirect({scopes:SCOPES,account:currentUser});throw new Error("Redirigiendo...");}
 }
 async function gFetch(token,url){
   const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
@@ -439,7 +441,7 @@ async function iniciarSesion(){
   btn.disabled=true;btn.textContent="Conectando...";err.style.display="none";
   try{
     await msalInstance.initialize();
-    const resp=await msalInstance.loginPopup({scopes:SCOPES});
+    const resp=await msalInstance.loginRedirect({scopes:SCOPES});
     currentUser=resp.account;
     const email=currentUser.username.toLowerCase();
     const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
@@ -689,7 +691,39 @@ function cerrarYBloquear(){
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 window.addEventListener("load",async()=>{
-  try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}
+  try{
+    await msalInstance.initialize();
+    const resp = await msalInstance.handleRedirectPromise();
+    if(resp && resp.account){
+      currentUser = resp.account;
+      const email = currentUser.username.toLowerCase();
+      const nombre = EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
+      currentUser.nombreDespacho = nombre;
+      document.getElementById("topbar-user").textContent = nombre;
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("loading-screen").style.display = "flex";
+      const token = await getToken();
+      setLoading("Comprobando días registrados...");
+      const fechas = await leerFechasRegistradas(token,nombre);
+      const pendientes = diasPendientes(fechas);
+      await ingestarDatos(token);
+      document.getElementById("loading-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "block";
+      const hoy=new Date();
+      const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+      const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+      document.getElementById("day-header").innerHTML=
+        `<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong>`+
+        ` · ${nombre} · ${getTarifa(null,nombre)} €/h`;
+      mostrarPendientes(pendientes);
+      const total = data.flatMap(b=>b.rows).length;
+      if(total===0){
+        document.getElementById("top-alerts").innerHTML=
+          `<div class="alert-info">No se han encontrado emails enviados ni eventos de calendario para hoy. Puedes añadir filas manualmente.</div>`;
+      }
+      render();
+    }
+  }catch(e){console.error("Init error:",e);}
 });
 </script>
 </body>
