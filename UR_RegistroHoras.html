@@ -254,8 +254,8 @@ async function leerCalendarioHoy(token){
 // ─── LECTURA FECHAS REGISTRADAS (para días pendientes) ───────────────────────
 async function leerFechasRegistradas(token,nombre){
   try{
-    const item = await gFetch(token,`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${XLSX_PATH}`);
-    const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`);
+    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx`);
+    const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/${itemData.id}/workbook/tables/${TABLE_NAME}/rows`);
     const fechas=new Set();
     for(const row of rows.value||[]){
       const v=row.values[0];
@@ -649,8 +649,8 @@ async function guardarEnSharePoint(){
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const item=await gFetch(token,`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${XLSX_PATH}`);
-    const itemId=item.id;
+    const xlsxItem=await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx`);
+    const itemId=xlsxItem.id;
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
     const fecha=new Date().toISOString().split("T")[0];
     const ab=currentUser.nombreDespacho;
