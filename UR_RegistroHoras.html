@@ -659,7 +659,7 @@ async function guardarEnSharePoint(){
       const t=getTarifa(r.cliente,ab);
       const imp=Math.round((r.minutos/60)*t*100)/100;
       const ig=IGUALAS.has(r.cliente)?"Sí":"No";
-      const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,ig]]};
+      const body={values:[[fecha,ab,r.cliente,"",r.tarea,r.descripcion,r.minutos,t,imp,ig,"No",""]]}; // 12 cols: Fecha,Abogado,Cliente,Sociedad,Tarea,Descripción,Minutos,€/h,Honorarios,Iguala,Facturado,NotasFact
       const resp=await fetch(
         `https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,
         {method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)}
