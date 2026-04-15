@@ -254,8 +254,8 @@ async function leerCalendarioHoy(token){
 // ─── LECTURA FECHAS REGISTRADAS (para días pendientes) ───────────────────────
 async function leerFechasRegistradas(token,nombre){
   try{
-    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/59CED7EE-A0D8-4732-90D0-6E1792723664`);
-    const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/${itemData.id}/workbook/tables/${TABLE_NAME}/rows`);
+    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/59CED7EE-A0D8-4732-90D0-6E1792723664`);
+    const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/${itemData.id}/workbook/tables/${TABLE_NAME}/rows`);
     const fechas=new Set();
     for(const row of rows.value||[]){
       const v=row.values[0];
@@ -639,7 +639,7 @@ function abrirResumen(){
     ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}
     ${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
     <div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
-    <button class="modal-btn" id="btn-sp" onclick="guardarCSV()">Descargar CSV</button>
+    <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
     <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
   document.getElementById("overlay").style.display="flex";
 }
@@ -661,7 +661,7 @@ async function guardarEnSharePoint(){
       const ig=IGUALAS.has(r.cliente)?"Sí":"No";
       const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,ig]]};
       const resp=await fetch(
-        `https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,
+        `https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,
         {method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)}
       );
       if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
