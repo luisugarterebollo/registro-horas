@@ -254,7 +254,7 @@ async function leerCalendarioHoy(token){
 // ─── LECTURA FECHAS REGISTRADAS (para días pendientes) ───────────────────────
 async function leerFechasRegistradas(token,nombre){
   try{
-    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx`);
+    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/59CED7EE-A0D8-4732-90D0-6E1792723664`);
     const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/items/${itemData.id}/workbook/tables/${TABLE_NAME}/rows`);
     const fechas=new Set();
     for(const row of rows.value||[]){
@@ -639,7 +639,7 @@ function abrirResumen(){
     ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}
     ${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
     <div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
-    <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
+    <button class="modal-btn" id="btn-sp" onclick="guardarCSV()">Descargar CSV</button>
     <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
   document.getElementById("overlay").style.display="flex";
 }
@@ -649,7 +649,7 @@ async function guardarEnSharePoint(){
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const xlsxItem=await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef/drive/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx`);
+    const xlsxItem={id:"59CED7EE-A0D8-4732-90D0-6E1792723664"};
     const itemId=xlsxItem.id;
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
     const fecha=new Date().toISOString().split("T")[0];
