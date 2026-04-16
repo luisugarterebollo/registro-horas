@@ -20,15 +20,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f1;color:#1a1a1
 .btn-login:disabled{opacity:0.5;cursor:not-allowed}
 #loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 40px);gap:12px}
 .loading-text{font-size:13px;color:#666}
-.loading-steps{font-size:11px;color:#aaa;margin-top:4px}
 .spinner-lg{width:24px;height:24px;border:2px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin .7s linear infinite}
-.wrap{padding:1rem 1.25rem;max-width:1000px;margin:0 auto}
+.wrap{padding:1rem 1.25rem;max-width:1080px;margin:0 auto}
 .day-header{font-size:12px;color:#666;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:0.5px solid #ddd}
 .day-header strong{color:#1a1a1a}
 .alert{background:#fef9ec;border:0.5px solid #f5a623;border-radius:8px;padding:10px 14px;font-size:12px;color:#b7640a;margin-bottom:1rem;line-height:1.5}
 .alert-success{background:#eaf3de;border:0.5px solid #639922;border-radius:8px;padding:10px 14px;font-size:12px;color:#3b6d11;margin-bottom:1rem;line-height:1.5}
 .alert-danger{background:#fdf0ef;border:0.5px solid #e8a09d;border-radius:8px;padding:10px 14px;font-size:12px;color:#922;margin-bottom:1rem;line-height:1.5}
-.alert-info{background:#eaf2fb;border:0.5px solid #b5d4f4;border-radius:8px;padding:10px 14px;font-size:12px;color:#185fa5;margin-bottom:1rem;line-height:1.5}
 .pending-days{background:#fff3cd;border:0.5px solid #f5a623;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem}
 .pending-days h3{font-size:13px;font-weight:500;color:#b7640a;margin-bottom:6px}
 .pending-days p{font-size:12px;color:#8a5700;line-height:1.5}
@@ -41,14 +39,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f1;color:#1a1a1
 .block-mins b{color:#1a1a1a}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 thead th{font-size:10px;font-weight:500;color:#888;text-align:left;padding:5px 8px;border-bottom:0.5px solid #ddd;background:#f7f7f5;white-space:nowrap}
-col.tc{width:170px}col.tt{width:175px}col.tm{width:68px}col.td{width:auto}col.tx{width:28px}
+col.cf{width:106px}col.tc{width:168px}col.tt{width:168px}col.tm{width:68px}col.td{width:auto}col.tx{width:28px}
 .row-main td{padding:6px 8px 2px;vertical-align:middle;border-bottom:none}
 .row-desc td{padding:0 8px 6px;vertical-align:top;border-bottom:0.5px solid #eee}
 .row-main.pending,.row-desc.pending{background:#fffbf0}
-select,input[type=number]{font-size:11px;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:3px 5px;color:#1a1a1a;font-family:inherit;width:100%}
+select,input[type=number],input[type=date]{font-size:11px;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:3px 5px;color:#1a1a1a;font-family:inherit;width:100%}
 select:hover,input:hover{border-color:#ccc}
 select:focus,input:focus{outline:none;border-color:#999;background:#f9f9f7}
 input[type=number]{text-align:center;font-weight:500}
+input[type=date]{font-size:10px;color:#555}
 .desc-input{font-size:11px;color:#555;width:100%;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:2px 5px;font-family:inherit;resize:none;line-height:1.45}
 .desc-input:hover{border-color:#ccc}
 .desc-input:focus{outline:none;border-color:#999;background:#f9f9f7;color:#1a1a1a}
@@ -78,6 +77,12 @@ input[type=number]{text-align:center;font-weight:500}
 .modal-btn-sec{width:100%;padding:8px;background:none;border:0.5px solid #ccc;border-radius:8px;font-size:12px;cursor:pointer;margin-top:8px;color:#1a1a1a}
 .modal-btn-sec:hover{background:#f5f5f5}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid #555;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+/* nuevo cliente inline */
+.new-client-wrap{display:inline-flex;align-items:center;gap:4px;margin-top:3px;width:100%}
+.new-client-input{font-size:11px;border:0.5px solid #999;border-radius:4px;padding:3px 5px;font-family:inherit;flex:1;background:#fff}
+.new-client-btn{font-size:10px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;white-space:nowrap}
+optgroup{font-size:10px;font-weight:600;color:#888}
+optgroup option{font-size:11px;font-weight:400;color:#1a1a1a}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -89,15 +94,14 @@ input[type=number]{text-align:center;font-weight:500}
 <div id="login-screen">
   <div class="login-card">
     <h1>Registro de Horas</h1>
-    <p>Inicia sesión con tu cuenta de Microsoft 365 del despacho para cargar tus emails y eventos del día y registrar tus horas en SharePoint.</p>
+    <p>Inicia sesión con tu cuenta de Microsoft 365 del despacho para registrar tus horas y guardarlas en SharePoint.</p>
     <button class="btn-login" id="btn-login" onclick="iniciarSesion()">Iniciar sesión con Microsoft</button>
     <p id="login-error" style="color:#c00;font-size:11px;margin-top:12px;display:none"></p>
   </div>
 </div>
 <div id="loading-screen">
   <div class="spinner-lg"></div>
-  <div class="loading-text" id="loading-text">Cargando...</div>
-  <div class="loading-steps" id="loading-steps"></div>
+  <div class="loading-text" id="loading-text">Comprobando días registrados...</div>
 </div>
 <div id="app-screen" style="display:none">
   <div class="wrap">
@@ -110,28 +114,19 @@ input[type=number]{text-align:center;font-weight:500}
       <div id="sum-rows"></div>
     </div>
     <button class="confirm-btn" id="btn-confirm" onclick="abrirResumen()">Confirmar horas del día</button>
-    <div style="height:2rem"></div>
   </div>
 </div>
 <div class="overlay" id="overlay">
   <div class="modal" id="modal"></div>
 </div>
-
 <script>
-// ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
-const CLIENT_ID   = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
-const TENANT_ID   = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
-const DRIVE_ID    = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
-const TABLE_NAME  = "Horas";
-const XLSX_PATH   = "Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx";
+const CLIENT_ID  = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
+const TENANT_ID  = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
+const DRIVE_ID   = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
+const SITE_ID    = "ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef";
+const TABLE_NAME = "TimeReport";
 const REDIRECT_URI = "https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
-const SCOPES = [
-  "https://graph.microsoft.com/Files.ReadWrite.All",
-  "https://graph.microsoft.com/Sites.ReadWrite.All",
-  "https://graph.microsoft.com/User.Read",
-  "https://graph.microsoft.com/Mail.Read",
-  "https://graph.microsoft.com/Calendars.Read"
-];
+const SCOPES = ["https://graph.microsoft.com/Files.ReadWrite.All","https://graph.microsoft.com/Sites.ReadWrite.All","https://graph.microsoft.com/User.Read"];
 
 const msalConfig = {
   auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:REDIRECT_URI },
@@ -139,9 +134,7 @@ const msalConfig = {
 };
 const msalInstance = new msal.PublicClientApplication(msalConfig);
 let currentUser = null;
-let rc = 50;
 
-// ─── DATOS DEL DESPACHO ───────────────────────────────────────────────────────
 const EMAILS_ABOGADOS = {
   "luis@ugarterebolloabogados.com":"Luis Ugarte Rebollo",
   "c.pastrana@ugarterebolloabogados.com":"Carlos Pastrana",
@@ -151,266 +144,102 @@ const EMAILS_ABOGADOS = {
   "m.alcantarilla@ugarterebolloabogados.com":"Mariano Alcantarilla de Lamo",
   "contabilidad@ugarterebolloabogados.com":"Susana Carracedo"
 };
-const TARIFAS = {
-  "Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,
-  "Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,
-  "Susana Carracedo":60
-};
-// Lista de clientes — se carga dinámicamente desde SharePoint. Lista de respaldo:
-const CLIENTES_FALLBACK = ["— pendiente —","A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Marko Rajamaa","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
-let CLIENTES = CLIENTES_FALLBACK;
-const TAREAS = [
-  "Análisis, consulta, revisión e investigación tributaria / mercantil",
-  "Redacción de escritos y documentos",
-  "Reuniones y llamadas (Teams / presencial)",
-  "Coordinación, gestión y correspondencia con cliente",
-  "Desarrollo de negocio y gestión del despacho"
-];
-const IGUALAS = new Set(["Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Casacuberta","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
-const SPECIAL = {PROSOCAM:225,"Javier Arroyo":225,Castañeda:275};
-const DOMINIO_CLIENTE = {
-  "argis.es":"Grupo Argis","casacuberta.com":"Grupo Casacuberta",
-  "pryconsa.es":"Grupo Pryconsa","prygesa.es":"Grupo Pryconsa",
-  "islacanela.es":"Grupo Pryconsa","ceeh.es":"Grupo Pryconsa",
-  "vbtravelgroup.com":"VB Global Group","sunroadenterprises.com":"Sunroad",
-  "mobelfis.com":"Mobelfis","orbis.es":"Orbis Tecnología",
-  "global-bcn.com":"BC Nonwovens","provalixhomes.com":"BC Nonwovens",
-  "trameratlantic.com":"Tramer Atlantic","qstars.com.co":"Tramer Atlantic",
-  "be2in.es":"SE92","itswm.com":"ITS Wealth Management",
-  "nexwellpower.com":"Nexwell","nexwell.com":"Nexwell",
-  "grupocox.com":"Ibexia","fundacionjuan23.org":"Javier Arroyo",
-  "quantoarquitectura.com":"Maga"
-};
-const EMAIL_CLIENTE = {
-  "enia.elorz@gmail.com":"Bratenia","jmateo@saintcroixhi.com":"Grupo Pryconsa",
-  "administracion@global-bcn.com":"BC Nonwovens","carlosvinas@global-bcn.com":"BC Nonwovens",
-  "miguelvinas@global-bcn.com":"BC Nonwovens","conchita@global-bcn.com":"BC Nonwovens",
-  "contabilidad@global-bcn.com":"BC Nonwovens","joseluisestevez@provalixhomes.com":"BC Nonwovens",
-  "legal@provalixhomes.com":"BC Nonwovens","eliehal@gmail.com":"SE92",
-  "cgv@be2in.es":"SE92","ai@itswm.com":"ITS Wealth Management",
-  "ep@itswm.com":"ITS Wealth Management","jsl@lexvel.com":"KP Investments / Red Rhino Banús",
-  "brett@nexwell.com":"Nexwell","bmoragues@nexwellpower.com":"Nexwell",
-  "borja@ibexiadv.com":"Nexwell","borja.moragues.ext@grupocox.com":"Nexwell",
-  "jarroyo@fundacionjuan23.org":"Javier Arroyo","mrajamaa@yahoo.com":"Marko Rajamaa",
-  "rdiazbarr@gmail.com":"— pendiente —","mirindaperez13@gmail.com":"— pendiente —"
-};
-const DOMINIOS_INTERNOS = new Set(["ugarterebolloabogados.com"]);
-const EXCLUIR_ASUNTO = ["furia homes"];
-const EXCLUIR_CLIENTES = new Set(["Ygarten"]);
+const TARIFAS = {"Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,"Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,"Susana Carracedo":60};
 
-// ─── DATOS ACTIVOS (se rellena tras ingestar emails) ──────────────────────────
-let data = [
+// ── LISTA DE CLIENTES ─────────────────────────────────────────────────────────
+// Estructura: { label, group }  group: P=Prioritario A=Alfabético R=Residual
+const CLIENTES_DEF = [
+  // PRIORITARIOS
+  {n:"Argis",                       g:"P"},
+  {n:"ARA Capital",                 g:"P"},
+  {n:"BC Nonwovens",                g:"P"},
+  {n:"Casacuberta",                 g:"P"},
+  {n:"Fernando Morientes",          g:"P"},
+  {n:"Ibexia",                      g:"P"},
+  {n:"Interno",                     g:"P"},
+  {n:"Javier Arroyo",               g:"P"},
+  {n:"LD Services Spain 24",        g:"P"},
+  {n:"Madrid Real Prop",            g:"P"},
+  {n:"Mobelfis",                    g:"P"},
+  {n:"Orbis Tecnología",            g:"P"},
+  {n:"PROSOCAM",                    g:"P"},
+  {n:"Pryconsa",                    g:"P"},
+  {n:"Riego 24 Real Estate",        g:"P"},
+  {n:"RRB",                         g:"P"},
+  {n:"SE92",                        g:"P"},
+  {n:"SIT Spain",                   g:"P"},
+  {n:"Sunroad",                     g:"P"},
+  {n:"Tatiana",                     g:"P"},
+  {n:"Tramer Atlantic / Quintero",  g:"P"},
+  {n:"VB Global Group",             g:"P"},
+  {n:"— pendiente —",               g:"P"},
+  // ALFABÉTICOS
+  {n:"Alcalá 254 Project",          g:"A"},
+  {n:"PF · Alexia",                 g:"A"},
+  {n:"PF · Andy Orchansky",         g:"A"},
+  {n:"Bluebait",                    g:"A"},
+  {n:"Bratenia",                    g:"A"},
+  {n:"Cardenete",                   g:"A"},
+  {n:"Castañeda",                   g:"A"},
+  {n:"Catastro",                    g:"A"},
+  {n:"Charenten",                   g:"A"},
+  {n:"David Sainz",                 g:"A"},
+  {n:"David Von Rosen",             g:"A"},
+  {n:"Eranovum",                    g:"A"},
+  {n:"PF · Familia Clariana",       g:"A"},
+  {n:"Financa",                     g:"A"},
+  {n:"Fomento Territorial",         g:"A"},
+  {n:"Galium GP",                   g:"A"},
+  {n:"Galium Spain I",              g:"A"},
+  {n:"González de Córdoba 16",      g:"A"},
+  {n:"Gómez de Cuenca",             g:"A"},
+  {n:"Italy Real Advisers",         g:"A"},
+  {n:"Jaruvia",                     g:"A"},
+  {n:"José Ramón Jover",            g:"A"},
+  {n:"Maga",                        g:"A"},
+  {n:"PF · Marko Rajamaa",          g:"A"},
+  {n:"Narváez Robna",               g:"A"},
+  {n:"Nexwell",                     g:"A"},
+  {n:"Oriol usufructo",             g:"A"},
+  {n:"PremiumMixes",                g:"A"},
+  {n:"PF · Rafael Merry del Val",   g:"A"},
+  {n:"Rocabert-Oriol",              g:"A"},
+  {n:"ThirdWay Partners",           g:"A"},
+  {n:"Velázquez 157 IBT",           g:"A"},
+  {n:"Villalba",                    g:"A"},
+  {n:"Waterloo",                    g:"A"},
+  {n:"Xiquena",                     g:"A"},
+  // RESIDUALES
+  {n:"A2CL Tecnología",             g:"R"},
+  {n:"Barmar Siete",                g:"R"},
+  {n:"PF · Borja Moreno",           g:"R"},
+  {n:"Familia Collantes",           g:"R"},
+  {n:"PF · Guy Shahar",             g:"R"},
+  {n:"PF · Héctor Nieto",           g:"R"},
+  {n:"Navantia extra",              g:"R"},
+  {n:"PF · Pedro Gómez Balboa",     g:"R"},
+  {n:"PF · Pedro Peña",             g:"R"},
+  {n:"Testamentaría Alcázar",       g:"R"},
+  {n:"Banús testamentaría",         g:"R"},
+  {n:"Tornos",                      g:"R"},
+  {n:"Zeller",                      g:"R"},
+];
+
+// Clientes temporales añadidos en sesión
+let clientesExtra = [];
+
+const TAREAS = ["Análisis, consulta, revisión e investigación tributaria / mercantil","Redacción de escritos y documentos","Reuniones y llamadas (Teams / presencial)","Coordinación, gestión y correspondencia con cliente","Desarrollo de negocio y gestión del despacho"];
+const IGUALAS = new Set(["Argis","Casacuberta","Pryconsa","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
+const SPECIAL = {PROSOCAM:225,"Javier Arroyo":225,Castañeda:275};
+
+const data = [
   {bid:"b1",label:"Honorarios facturables",color:"#185fa5",rows:[]},
   {bid:"b2",label:"Igualas",color:"#0f6e56",rows:[]},
   {bid:"b3",label:"Pendiente / Interno / Otros",color:"#b7640a",rows:[]}
 ];
 
-// ─── GRAPH API HELPERS ────────────────────────────────────────────────────────
-async function getToken(){
-  if(!currentUser)throw new Error("No hay sesión activa");
-  try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}
-  catch(e){await msalInstance.acquireTokenRedirect({scopes:SCOPES,account:currentUser});throw new Error("Redirigiendo...");}
-}
-async function gFetch(token,url){
-  const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(`Graph error ${r.status}: ${e.error?.message||url}`)}
-  return r.json();
-}
-
-// ─── LECTURA DE EMAILS ENVIADOS HOY ──────────────────────────────────────────
-async function leerEmailsHoy(token){
-  const hoy = new Date();
-  const inicio = new Date(hoy); inicio.setHours(0,0,0,0);
-  const fin = new Date(hoy); fin.setHours(23,59,59,999);
-  const isoI = inicio.toISOString(); const isoF = fin.toISOString();
-  // Leer carpeta Elementos enviados paginando hasta 100 emails
-  let emails = []; let url =
-    `https://graph.microsoft.com/v1.0/me/mailFolders/SentItems/messages?$top=100`+
-    `&$filter=sentDateTime ge ${isoI} and sentDateTime le ${isoF}`+
-    `&$select=id,subject,sentDateTime,toRecipients,ccRecipients,bodyPreview,hasAttachments,body`+
-    `&$orderby=sentDateTime asc`;
-  while(url){
-    const d = await gFetch(token, url);
-    emails = emails.concat(d.value||[]);
-    url = d['@odata.nextLink']||null;
-  }
-  return emails;
-}
-
-// ─── LECTURA DE CALENDARIO HOY ───────────────────────────────────────────────
-async function leerCalendarioHoy(token){
-  const hoy = new Date();
-  const inicio = new Date(hoy); inicio.setHours(0,0,0,0);
-  const fin = new Date(hoy); fin.setHours(23,59,59,999);
-  const url =
-    `https://graph.microsoft.com/v1.0/me/calendarView?`+
-    `startDateTime=${inicio.toISOString()}&endDateTime=${fin.toISOString()}`+
-    `&$select=subject,start,end,showAs,isAllDay,isCancelled,attendees,organizer`+
-    `&$top=50`;
-  const d = await gFetch(token, url);
-  return (d.value||[]).filter(e=>!e.isCancelled && e.showAs!=='free' && !e.isAllDay);
-}
-
-// ─── LECTURA FECHAS REGISTRADAS (para días pendientes) ───────────────────────
-async function leerFechasRegistradas(token,nombre){
-  try{
-    const itemData = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/59CED7EE-A0D8-4732-90D0-6E1792723664`);
-    const rows = await gFetch(token,`https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/${itemData.id}/workbook/tables/${TABLE_NAME}/rows`);
-    const fechas=new Set();
-    for(const row of rows.value||[]){
-      const v=row.values[0];
-      if((v[1]||"").toString().toLowerCase().includes(nombre.split(" ")[0].toLowerCase())){
-        const f=(v[0]||"").toString().substring(0,10);if(f)fechas.add(f);
-      }
-    }
-    return[...fechas];
-  }catch(e){return[];}
-}
-
-// ─── LÓGICA DE ASIGNACIÓN DE CLIENTE ─────────────────────────────────────────
-function clienteDesdeRecipientes(toList, ccList, asunto){
-  // Excluir Furia Homes
-  if(EXCLUIR_ASUNTO.some(ex=>asunto.toLowerCase().includes(ex))) return "__EXCLUIR__";
-  // PROSOCAM en asunto
-  if(asunto.toLowerCase().includes("prosocam")) return "PROSOCAM";
-  // jsl@lexvel.com sin Furia Homes → KP
-  const todos = [...toList,...ccList];
-  // Buscar por email exacto
-  for(const e of todos){
-    const em = (e.emailAddress?.address||"").toLowerCase();
-    if(DOMINIOS_INTERNOS.has(em.split("@")[1])) continue;
-    if(EMAIL_CLIENTE[em]) return EMAIL_CLIENTE[em];
-  }
-  // Buscar por dominio
-  for(const e of todos){
-    const em = (e.emailAddress?.address||"").toLowerCase();
-    const dom = em.split("@")[1]||"";
-    if(DOMINIOS_INTERNOS.has(dom)) continue;
-    if(DOMINIO_CLIENTE[dom]) return DOMINIO_CLIENTE[dom];
-  }
-  // Solo internos → Interno
-  const externoCount = todos.filter(e=>{
-    const dom=(e.emailAddress?.address||"").toLowerCase().split("@")[1]||"";
-    return !DOMINIOS_INTERNOS.has(dom);
-  }).length;
-  if(externoCount===0) return "Interno";
-  return "— pendiente —";
-}
-
-// ─── ESTIMACIÓN DE TIEMPO ────────────────────────────────────────────────────
-function estimarMinutos(emails){
-  // emails: array de emails del mismo hilo
-  let score = 0;
-  for(const em of emails){
-    const body = (em.body?.content||em.bodyPreview||"");
-    const words = body.replace(/<[^>]+>/g,"").split(/\s+/).filter(w=>w.length>3).length;
-    // Señales de tiempo alto
-    if(em.hasAttachments) score += 2;
-    if(words > 400) score += 4;
-    else if(words > 150) score += 2;
-    else if(words > 50) score += 1;
-    // Referencias normativas
-    const normas = (body.match(/art[íi]culo|apartado|\bLIVA\b|\bLIS\b|\bLIRPF\b|\bLIP\b|\bTEAF\b|\bTEAC\b|\bREBU\b|\bCDI\b|\bSPA\b|epígrafe|jurisprudencia|sentencia/gi)||[]).length;
-    score += Math.min(normas, 4);
-  }
-  if(score >= 10) return 90;
-  if(score >= 6)  return 60;
-  if(score >= 3)  return 30;
-  if(score >= 1)  return 15;
-  return 5;
-}
-
-// ─── DETERMINAR TAREA ────────────────────────────────────────────────────────
-function determinarTarea(emails, esReunion){
-  if(esReunion) return TAREAS[2];
-  const body = emails.map(e=>e.body?.content||e.bodyPreview||"").join(" ").replace(/<[^>]+>/g,"").toLowerCase();
-  const words = body.split(/\s+/).filter(w=>w.length>3).length;
-  const tieneAdjunto = emails.some(e=>e.hasAttachments);
-  if(words>200 && (body.includes("artículo")||body.includes("análisis")||body.includes("tributar")||body.includes("impuesto"))) return TAREAS[0];
-  if(tieneAdjunto && words>100) return TAREAS[1];
-  if(words>50) return TAREAS[0];
-  return TAREAS[3];
-}
-
-// ─── NORMALIZAR ASUNTO (quitar prefijos) ─────────────────────────────────────
-function normAsunto(s){
-  return (s||"").replace(/^(RE|RV|FW|R|FWD):\s*/gi,"").trim().toLowerCase();
-}
-
-// ─── AGRUPAR EMAILS POR HILO ─────────────────────────────────────────────────
-function agruparEmails(emails){
-  const hilos = new Map(); // normAsunto → [emails]
-  for(const em of emails){
-    const key = normAsunto(em.subject);
-    if(!hilos.has(key)) hilos.set(key,[]);
-    hilos.get(key).push(em);
-  }
-  return hilos;
-}
-
-// ─── ASIGNAR BLOQUE SEGÚN CLIENTE ────────────────────────────────────────────
-function bloqueParaCliente(cliente){
-  if(cliente==="Interno") return "b3";
-  if(cliente==="— pendiente —") return "b3";
-  if(IGUALAS.has(cliente)) return "b2";
-  return "b1";
-}
-
-// ─── INGESTIÓN COMPLETA ───────────────────────────────────────────────────────
-async function ingestarDatos(token){
-  setLoading("Leyendo emails enviados hoy...");
-  const emails = await leerEmailsHoy(token);
-
-  setLoading("Leyendo calendario...");
-  const eventos = await leerCalendarioHoy(token);
-
-  // Reiniciar bloques
-  data.forEach(b=>b.rows=[]);
-
-  // ── Procesar emails ──
-  const hilos = agruparEmails(emails);
-  let idx = 0;
-  for(const [asunto, grupo] of hilos){
-    const asuntoOriginal = grupo[0].subject||"";
-    const toList = grupo.flatMap(e=>e.toRecipients||[]);
-    const ccList = grupo.flatMap(e=>e.ccRecipients||[]);
-    const cliente = clienteDesdeRecipientes(toList, ccList, asuntoOriginal);
-    if(cliente==="__EXCLUIR__") continue;
-    if(EXCLUIR_CLIENTES.has(cliente)) continue;
-    const minutos = estimarMinutos(grupo);
-    const tarea = determinarTarea(grupo, false);
-    const bid = bloqueParaCliente(cliente);
-    const n = grupo.length;
-    const desc = `${asuntoOriginal.replace(/^(RE|RV|FW|R|FWD):\s*/gi,"")} (${n} email${n>1?"s":""})`;
-    data.find(b=>b.bid===bid).rows.push({
-      id:`e${idx++}`,c:cliente,t:tarea,m:minutos,d:desc,p:cliente==="— pendiente —"
-    });
-  }
-
-  // ── Procesar eventos de calendario ──
-  for(const ev of eventos){
-    const asunto = ev.subject||"";
-    // Intentar detectar cliente por asistentes
-    const asistentes = (ev.attendees||[]).map(a=>a.emailAddress||{});
-    const cliente = clienteDesdeRecipientes(asistentes, [], asunto);
-    if(cliente==="__EXCLUIR__") continue;
-    const start = new Date(ev.start.dateTime||ev.start);
-    const end = new Date(ev.end.dateTime||ev.end);
-    const durMin = Math.round((end-start)/60000);
-    const bid = bloqueParaCliente(cliente);
-    const hora = start.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
-    const desc = `${asunto} — reunión ${hora} (${Math.floor(durMin/60)}h${durMin%60>0?" "+durMin%60+"min":""})`;
-    data.find(b=>b.bid===bid).rows.push({
-      id:`ev${idx++}`,c:cliente,t:TAREAS[2],m:durMin,d:desc,p:cliente==="— pendiente —"
-    });
-  }
-}
-
-// ─── UTILIDADES DE UI ─────────────────────────────────────────────────────────
-function setLoading(txt, step=""){
-  document.getElementById("loading-text").textContent=txt;
-  document.getElementById("loading-steps").textContent=step;
-}
+let rc=50;
+const HOY = new Date().toISOString().split("T")[0];
 
 function esLaborable(d){return d.getDay()>=1&&d.getDay()<=5;}
 function diasPendientes(reg){
@@ -425,6 +254,29 @@ function diasPendientes(reg){
   }
   return lista.reverse();
 }
+async function getToken(){
+  if(!currentUser)throw new Error("No hay sesión activa");
+  try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}
+  catch(e){const r=await msalInstance.acquireTokenPopup({scopes:SCOPES,account:currentUser});return r.accessToken;}
+}
+async function leerFechas(token,nombre){
+  try{
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)return[];
+    const item=await r1.json();
+    const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r2.ok)return[];
+    const d2=await r2.json();
+    const fechas=new Set();
+    for(const row of d2.value||[]){
+      const v=row.values[0];
+      if((v[1]||"").toString().toLowerCase().includes(nombre.split(" ")[0].toLowerCase())){
+        const f=(v[0]||"").toString().substring(0,10);if(f)fechas.add(f);
+      }
+    }
+    return[...fechas];
+  }catch(e){return[];}
+}
 function mostrarPendientes(dias){
   const sec=document.getElementById("pending-days-section");
   if(!dias||dias.length===0){sec.innerHTML="";return;}
@@ -433,15 +285,13 @@ function mostrarPendientes(dias){
   const msg=dias.length>=3?`<strong>Atención:</strong> llevas <strong>${dias.length} días laborables sin registrar</strong> horas.`:`Tienes <strong>${dias.length} día${dias.length>1?"s":""} laborable${dias.length>1?"s":""}</strong> sin registrar.`;
   sec.innerHTML=`<div class="pending-days"><h3>Días pendientes</h3><p>${msg}</p><div class="days-list">${chips}</div></div>`;
 }
-
-// ─── LOGIN Y ARRANQUE ─────────────────────────────────────────────────────────
 async function iniciarSesion(){
   const btn=document.getElementById("btn-login");
   const err=document.getElementById("login-error");
   btn.disabled=true;btn.textContent="Conectando...";err.style.display="none";
   try{
     await msalInstance.initialize();
-    const resp=await msalInstance.loginRedirect({scopes:SCOPES});
+    const resp=await msalInstance.loginPopup({scopes:SCOPES});
     currentUser=resp.account;
     const email=currentUser.username.toLowerCase();
     const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
@@ -449,140 +299,155 @@ async function iniciarSesion(){
     document.getElementById("topbar-user").textContent=nombre;
     document.getElementById("login-screen").style.display="none";
     document.getElementById("loading-screen").style.display="flex";
-
     const token=await getToken();
-
-    setLoading("Comprobando días registrados...");
-    const fechas=await leerFechasRegistradas(token,nombre);
+    const fechas=await leerFechas(token,nombre);
     const pendientes=diasPendientes(fechas);
-
-    await ingestarDatos(token);
-
-    setLoading("Listo");
     document.getElementById("loading-screen").style.display="none";
     document.getElementById("app-screen").style.display="block";
-
     const hoy=new Date();
     const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    document.getElementById("day-header").innerHTML=
-      `<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong>`+
-      ` · ${nombre} · ${getTarifa(null,nombre)} €/h`;
-
+    document.getElementById("day-header").innerHTML=`<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong> · ${nombre} · ${getTarifa(null,nombre)} €/h`;
     mostrarPendientes(pendientes);
-
-    const total = data.flatMap(b=>b.rows).length;
-    if(total===0){
-      document.getElementById("top-alerts").innerHTML=
-        `<div class="alert-info">No se han encontrado emails enviados ni eventos de calendario para hoy. Puedes añadir filas manualmente.</div>`;
-    }
     render();
-
   }catch(e){
     btn.disabled=false;btn.textContent="Iniciar sesión con Microsoft";
     err.style.display="block";err.textContent="Error: "+e.message;
-    document.getElementById("loading-screen").style.display="none";
-    document.getElementById("login-screen").style.display="flex";
   }
 }
+function getTarifa(c,a){const ab=a||(currentUser?currentUser.nombreDespacho:"");if(c&&SPECIAL[c])return SPECIAL[c];return TARIFAS[ab]||450;}
 
-// ─── RENDER Y TABLA ───────────────────────────────────────────────────────────
-function getTarifa(c,a){
-  const ab=a||(currentUser?currentUser.nombreDespacho:"");
-  if(c&&SPECIAL[c])return SPECIAL[c];
-  return TARIFAS[ab]||450;
+// ── DESPLEGABLE DE CLIENTES con grupos de prioridad ───────────────────────────
+function cOpts(sel){
+  const prio = CLIENTES_DEF.filter(x=>x.g==="P");
+  const alfa = CLIENTES_DEF.filter(x=>x.g==="A").sort((a,b)=>a.n.localeCompare(b.n,"es"));
+  const resi = CLIENTES_DEF.filter(x=>x.g==="R").sort((a,b)=>a.n.localeCompare(b.n,"es"));
+  const extra = clientesExtra.map(n=>({n,g:"X"}));
+
+  let html = "";
+  // Grupo Prioritarios
+  html += `<optgroup label="── Prioritarios ──">`;
+  prio.forEach(c=>{ html+=`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`; });
+  html += `</optgroup>`;
+  // Grupo Alfabéticos
+  html += `<optgroup label="── Alfabéticos ──">`;
+  alfa.forEach(c=>{ html+=`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`; });
+  html += `</optgroup>`;
+  // Grupo Residuales
+  html += `<optgroup label="── Residuales ──">`;
+  resi.forEach(c=>{ html+=`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`; });
+  html += `</optgroup>`;
+  // Clientes añadidos en sesión
+  if(extra.length){
+    html += `<optgroup label="── Añadidos esta sesión ──">`;
+    extra.forEach(c=>{ html+=`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`; });
+    html += `</optgroup>`;
+  }
+  // Opción especial para añadir nuevo
+  html += `<option value="__nuevo__">+ Añadir cliente nuevo...</option>`;
+  return html;
 }
-function cOpts(sel){return CLIENTES.map(c=>`<option value="${c}"${sel===c?" selected":""}>${c}</option>`).join("")}
+
 function tOpts(sel){return TAREAS.map(t=>`<option value="${t}"${sel===t?" selected":""}>${t}</option>`).join("")}
+
 function rowsHtml(bid,rows){
   return rows.map(r=>{
-    const pc=r.p?"pending":"";const badge=r.p?`<span class="badge-p">pendiente</span>`:"";
+    const pc=r.p?"pending":"";
+    const badge=r.p?`<span class="badge-p">pendiente</span>`:"";
+    const fecha=r.f||HOY;
     return `<tr class="row-main ${pc}" id="rm-${r.id}">
-      <td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}</td>
+      <td><input type="date" value="${fecha}" onchange="refresh()" class="date-input-${r.id}"></td>
+      <td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}<div id="nc-${r.id}" style="display:none" class="new-client-wrap"><input class="new-client-input" placeholder="Nombre del cliente..." id="nci-${r.id}"><button class="new-client-btn" onclick="confirmarNuevoCliente('${bid}','${r.id}')">OK</button></div></td>
       <td><select onchange="refresh()">${tOpts(r.t)}</select></td>
       <td><input type="number" min="0" max="600" value="${r.m}" oninput="refresh()"></td>
       <td></td>
       <td><button class="del-btn" onclick="delRow('${bid}','${r.id}')">×</button></td>
     </tr>
-    <tr class="row-desc ${pc}" id="rd-${r.id}">
-      <td colspan="4" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td>
-      <td></td>
-    </tr>`;
+    <tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="5" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;
   }).join("");
 }
+
 function blockHtml(b){
-  return `<div class="block">
-    <div class="block-header">
-      <span class="block-title" style="color:${b.color}">${b.label}</span>
-      <span class="block-mins" id="bm-${b.bid}"></span>
-    </div>
-    <table><colgroup><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
-    <thead><tr><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
-    <tbody id="tb-${b.bid}">${rowsHtml(b.bid,b.rows)}</tbody></table>
-    <button class="add-btn" onclick="addRow('${b.bid}')">+ Añadir fila</button>
-  </div>`;
+  return `<div class="block"><div class="block-header"><span class="block-title" style="color:${b.color}">${b.label}</span><span class="block-mins" id="bm-${b.bid}"></span></div>
+  <table><colgroup><col class="cf"><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
+  <thead><tr><th>Fecha</th><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
+  <tbody id="tb-${b.bid}">${rowsHtml(b.bid,b.rows)}</tbody></table>
+  <button class="add-btn" onclick="addRow('${b.bid}')">+ Añadir fila</button></div>`;
 }
+
 function render(){
   document.getElementById("blocks").innerHTML=data.map(blockHtml).join("");
   const p=data.flatMap(b=>b.rows).filter(r=>r.p).length;
-  document.getElementById("top-alerts").innerHTML=p>0
-    ?`<div class="alert">${p} entrada${p>1?"s":""} marcadas como <strong>— pendiente —</strong> requieren asignación de cliente.</div>`
-    :"";
+  document.getElementById("top-alerts").innerHTML=p>0?`<div class="alert">${p} entrada${p>1?"s":""} marcadas como <strong>— pendiente —</strong> requieren asignación de cliente.</div>`:"";
   refresh();
 }
-function getMins(bid){
-  const tb=document.getElementById("tb-"+bid);
-  if(!tb)return 0;
-  return Array.from(tb.querySelectorAll("input[type=number]")).reduce((s,i)=>s+(parseInt(i.value)||0),0);
-}
+
+function getMins(bid){const tb=document.getElementById("tb-"+bid);if(!tb)return 0;return Array.from(tb.querySelectorAll("input[type=number]")).reduce((s,i)=>s+(parseInt(i.value)||0),0);}
+
 function refresh(){
-  data.forEach(b=>{
-    const m=getMins(b.bid);
-    const el=document.getElementById("bm-"+b.bid);
-    if(el)el.innerHTML=`<b>${Math.floor(m/60)}h ${m%60}min</b>`;
-  });
+  data.forEach(b=>{const m=getMins(b.bid);const el=document.getElementById("bm-"+b.bid);if(el)el.innerHTML=`<b>${Math.floor(m/60)}h ${m%60}min</b>`;});
   const map={};
-  data.forEach(b=>{
-    const tb=document.getElementById("tb-"+b.bid);
-    if(!tb)return;
+  data.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;
     Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{
-      const c=tr.querySelector("select").value;
-      const m=parseInt(tr.querySelector("input[type=number]").value)||0;
+      const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");
+      const c=sels[0].value;const m=parseInt(inp.value)||0;
       map[c]=(map[c]||0)+m;
     });
   });
   const total=Object.values(map).reduce((s,v)=>s+v,0);
-  let html=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])
-    .map(([c,m])=>`<div class="sum-row"><span>${c}</span><span>${Math.floor(m/60)}h ${m%60}min</span></div>`).join("");
+  let html=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,m])=>`<div class="sum-row"><span>${c}</span><span>${Math.floor(m/60)}h ${m%60}min</span></div>`).join("");
   html+=`<div class="sum-row"><span>Total</span><span>${Math.floor(total/60)}h ${total%60}min</span></div>`;
   document.getElementById("sum-rows").innerHTML=html;
 }
+
 function onC(bid,rid,val){
   const b=data.find(x=>x.bid===bid);if(!b)return;
   const r=b.rows.find(x=>x.id===rid);if(!r)return;
+  if(val==="__nuevo__"){
+    // Mostrar campo inline para introducir nombre
+    const nc=document.getElementById("nc-"+rid);
+    if(nc)nc.style.display="flex";
+    return;
+  }
   r.p=(val==="— pendiente —");
-  ["rm-","rd-"].forEach(p=>{
-    const el=document.getElementById(p+rid);
-    if(!el)return;
-    el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");
-  });
-  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");
-  if(badge)badge.style.display=r.p?"":"none";
-  const pendTotal=data.flatMap(b=>b.rows).filter(r=>r.p).length;
-  document.getElementById("top-alerts").innerHTML=pendTotal>0
-    ?`<div class="alert">${pendTotal} entrada${pendTotal>1?"s":""} marcadas como <strong>— pendiente —</strong> requieren asignación de cliente.</div>`:"";
+  ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");});
+  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display=r.p?"":"none";
   refresh();
 }
+
+function confirmarNuevoCliente(bid,rid){
+  const input=document.getElementById("nci-"+rid);
+  if(!input)return;
+  const nombre=input.value.trim();
+  if(!nombre)return;
+  // Añadir a la lista de extras de sesión
+  if(!clientesExtra.includes(nombre))clientesExtra.push(nombre);
+  // Actualizar el select de esta fila
+  const tr=document.getElementById("rm-"+rid);
+  if(!tr)return;
+  const sel=tr.querySelector("select");
+  if(sel){sel.innerHTML=cOpts(nombre);sel.value=nombre;}
+  // Ocultar campo
+  const nc=document.getElementById("nc-"+rid);if(nc)nc.style.display="none";
+  // Actualizar estado pending
+  const b=data.find(x=>x.bid===bid);
+  if(b){const r=b.rows.find(x=>x.id===rid);if(r){r.p=false;r.c=nombre;}}
+  ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim();});
+  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display="none";
+  refresh();
+}
+
 function delRow(bid,rid){
   const b=data.find(x=>x.bid===bid);if(!b)return;
   b.rows=b.rows.filter(x=>x.id!==rid);
   ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(el)el.remove();});
   refresh();
 }
+
 function addRow(bid){
   const b=data.find(x=>x.bid===bid);if(!b)return;
   const id="e"+rc++;
-  const nr={id,c:"— pendiente —",t:TAREAS[3],m:0,d:"",p:true};
+  const nr={id,c:"— pendiente —",t:TAREAS[3],m:0,d:"",p:true,f:new Date().toISOString().split("T")[0]};
   b.rows.push(nr);
   const tb=document.getElementById("tb-"+bid);
   const tmp=document.createElement("tbody");
@@ -590,23 +455,24 @@ function addRow(bid){
   Array.from(tmp.children).forEach(tr=>tb.appendChild(tr));
   refresh();
 }
+
 function getRows(){
   const rows=[];
   data.forEach(b=>{
-    const tb=document.getElementById("tb-"+b.bid);
-    if(!tb)return;
+    const tb=document.getElementById("tb-"+b.bid);if(!tb)return;
     Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{
       const sels=tr.querySelectorAll("select");
       const inp=tr.querySelector("input[type=number]");
+      const dateInp=tr.querySelector("input[type=date]");
       const rdesc=tr.nextElementSibling;
       const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";
-      rows.push({cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});
+      const fecha=dateInp?dateInp.value:HOY;
+      rows.push({fecha,cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});
     });
   });
   return rows;
 }
 
-// ─── RESUMEN Y GUARDADO ───────────────────────────────────────────────────────
 function abrirResumen(){
   const rows=getRows();
   const sinMin=rows.filter(r=>r.minutos===0);
@@ -618,68 +484,49 @@ function abrirResumen(){
   const fg=grp(fact),ig2=grp(ig),og=grp(otros);
   const ab=currentUser?currentUser.nombreDespacho:"—";
   let ftotal=0;
-  let fhtml=Object.entries(fg).map(([c,m])=>{
-    const t=getTarifa(c,ab),imp=(m/60)*t;ftotal+=imp;
-    return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;color:#888">${t}€/h</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;
-  }).join("");
+  let fhtml=Object.entries(fg).map(([c,m])=>{const t=getTarifa(c,ab),imp=(m/60)*t;ftotal+=imp;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;color:#888">${t}€/h</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
   fhtml+=`<tr class="total-row"><td colspan="3">Total facturable</td><td style="text-align:right">${Math.round(ftotal).toLocaleString("es-ES")}€</td></tr>`;
-  const ihtml=Object.entries(ig2).map(([c,m])=>{
-    const t=getTarifa(null,ab),imp=(m/60)*t;
-    return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;
-  }).join("");
+  const ihtml=Object.entries(ig2).map(([c,m])=>{const t=getTarifa(null,ab),imp=(m/60)*t;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
   const ohtml=Object.entries(og).map(([c,m])=>`<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td></tr>`).join("");
   let warns="";
   if(sinMin.length)warns+=`<div class="alert">${sinMin.length} entrada${sinMin.length>1?"s":""} con 0 minutos.</div>`;
   if(sinC.length)warns+=`<div class="alert">${sinC.length} entrada${sinC.length>1?"s":""} sin cliente asignado.</div>`;
-  document.getElementById("modal").innerHTML=`
-    ${warns}
-    <h2>Resumen — ${new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</h2>
-    <div class="msec-title">Honorarios facturables</div>
-    <table>${fhtml||"<tr><td style='color:#888'>Sin entradas facturables</td></tr>"}</table>
-    ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}
-    ${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
-    <div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
-    <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
-    <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
+  document.getElementById("modal").innerHTML=`${warns}<h2>Resumen — ${new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</h2>
+  <div class="msec-title">Honorarios facturables</div><table>${fhtml||"<tr><td style='color:#888'>Sin entradas facturables</td></tr>"}</table>
+  ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
+  <div class="impact">Has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
+  <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
+  <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
   document.getElementById("overlay").style.display="flex";
 }
 
 async function guardarEnSharePoint(){
-  const btn=document.getElementById("btn-sp");
-  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
+  const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const xlsxItem={id:"59CED7EE-A0D8-4732-90D0-6E1792723664"};
-    const itemId=xlsxItem.id;
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)throw new Error(`No se pudo acceder al archivo (${r1.status}).`);
+    const item=await r1.json();const itemId=item.id;
+    // Filtrar filas válidas — usar la fecha REAL de cada fila
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
-    const fecha=new Date().toISOString().split("T")[0];
     const ab=currentUser.nombreDespacho;
     let ok=0,fail=0;
     for(const r of rows){
       const t=getTarifa(r.cliente,ab);
       const imp=Math.round((r.minutos/60)*t*100)/100;
-      const ig=IGUALAS.has(r.cliente)?"Sí":"No";
-      const body={values:[[fecha,ab,r.cliente,"",r.tarea,r.descripcion,r.minutos,t,imp,ig,"No",""]]}; // 12 cols: Fecha,Abogado,Cliente,Sociedad,Tarea,Descripción,Minutos,€/h,Honorarios,Iguala,Facturado,NotasFact
-      const resp=await fetch(
-        `https://graph.microsoft.com/v1.0/sites/ugarterebolloabogados.sharepoint.com,579cb2a7-700b-4ba8-baa1-52ac42114a8b,76a4af93-5d4c-4205-b638-8d6a4739bef1/drive/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,
-        {method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)}
-      );
+      // r.fecha contiene la fecha real de esa fila (YYYY-MM-DD)
+      const body={values:[[r.fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,"No"]]};
+      const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
       if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
     }
     if(fail===0){
-      document.getElementById("modal").innerHTML=
-        `<div class="alert-success"><strong>${ok} fila${ok>1?"s":""} guardada${ok>1?"s":""} correctamente en SharePoint.</strong><br>
-        <span style="font-size:11px;margin-top:4px;display:block">Registradas en UR_Registro_Horas_v2_2.xlsx</span></div>
-        <button class="modal-btn-sec" onclick="cerrarYBloquear()">Cerrar</button>`;
+      document.getElementById("modal").innerHTML=`<div class="alert-success"><strong>${ok} fila${ok>1?"s":""} guardada${ok>1?"s":""} correctamente en SharePoint.</strong><br><span style="font-size:11px;margin-top:4px;display:block">Registradas en UR_Registro_Horas_v2_2.xlsx</span></div><button class="modal-btn-sec" onclick="cerrarYBloquear()">Cerrar</button>`;
     }else{
-      document.getElementById("modal").innerHTML=
-        `<div class="alert-danger">${ok} filas guardadas, ${fail} con error. Abre la consola (F12) para detalles.</div>
-        <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar</button>`;
+      document.getElementById("modal").innerHTML=`<div class="alert-danger">${ok} filas guardadas, ${fail} con error. Pulsa F12 para detalles.</div><button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar</button>`;
     }
   }catch(e){
     btn.disabled=false;btn.innerHTML="Guardar en SharePoint";
-    document.getElementById("modal").insertAdjacentHTML("afterbegin",
-      `<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);
+    document.getElementById("modal").insertAdjacentHTML("afterbegin",`<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);
   }
 }
 
@@ -689,42 +536,7 @@ function cerrarYBloquear(){
   cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";
 }
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
-window.addEventListener("load",async()=>{
-  try{
-    await msalInstance.initialize();
-    const resp = await msalInstance.handleRedirectPromise();
-    if(resp && resp.account){
-      currentUser = resp.account;
-      const email = currentUser.username.toLowerCase();
-      const nombre = EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
-      currentUser.nombreDespacho = nombre;
-      document.getElementById("topbar-user").textContent = nombre;
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("loading-screen").style.display = "flex";
-      const token = await getToken();
-      setLoading("Comprobando días registrados...");
-      const fechas = await leerFechasRegistradas(token,nombre);
-      const pendientes = diasPendientes(fechas);
-      await ingestarDatos(token);
-      document.getElementById("loading-screen").style.display = "none";
-      document.getElementById("app-screen").style.display = "block";
-      const hoy=new Date();
-      const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-      const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-      document.getElementById("day-header").innerHTML=
-        `<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong>`+
-        ` · ${nombre} · ${getTarifa(null,nombre)} €/h`;
-      mostrarPendientes(pendientes);
-      const total = data.flatMap(b=>b.rows).length;
-      if(total===0){
-        document.getElementById("top-alerts").innerHTML=
-          `<div class="alert-info">No se han encontrado emails enviados ni eventos de calendario para hoy. Puedes añadir filas manualmente.</div>`;
-      }
-      render();
-    }
-  }catch(e){console.error("Init error:",e);}
-});
+window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
 </script>
 </body>
 </html>
