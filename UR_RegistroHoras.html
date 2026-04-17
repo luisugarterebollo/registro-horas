@@ -77,6 +77,12 @@ input[type=number]{text-align:center;font-weight:500}
 .modal-btn-sec:hover{background:#f5f5f5}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid #555;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
+.import-bar{background:#eaf2fb;border:0.5px solid #b5d4f4;border-radius:10px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.import-bar span{font-size:12px;color:#185fa5;line-height:1.45;flex:1}
+.import-bar strong{color:#0c447c}
+.btn-import{padding:7px 14px;background:#185fa5;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn-import:hover{background:#0c447c}
+.import-success{background:#eaf3de;border:0.5px solid #639922;border-radius:8px;padding:8px 12px;font-size:12px;color:#3b6d11;margin-bottom:1rem}
 </style>
 </head>
 <body>
@@ -100,6 +106,13 @@ input[type=number]{text-align:center;font-weight:500}
   <div class="wrap">
     <div class="day-header" id="day-header"></div>
     <div id="pending-days-section"></div>
+    <div id="import-bar">
+      <div class="import-bar">
+        <span>¿Vienes del asistente de chat? <strong>Importa tu archivo .json</strong> para cargar las horas directamente sin teclear nada.</span>
+        <button class="btn-import" onclick="document.getElementById('import-file-input').click()">Importar horas →</button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importarDesdeAsistente(this)">
+      </div>
+    </div>
     <div id="top-alerts"></div>
     <div id="blocks"></div>
     <div class="summary-wrap">
@@ -139,37 +152,9 @@ const EMAILS_ABOGADOS = {
   "contabilidad@ugarterebolloabogados.com":"Susana Carracedo"
 };
 const TARIFAS = {"Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,"Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,"Susana Carracedo":60};
-// Clientes agrupados: g=P (Prioritario), g=A (Alfabético), g=R (Residual)
-const CLIENTES_DEF = [
-  {n:"Argis",g:"P"},{n:"ARA Capital",g:"P"},{n:"BC Nonwovens",g:"P"},{n:"Casacuberta",g:"P"},
-  {n:"Fernando Morientes",g:"P"},{n:"Ibexia",g:"P"},{n:"Interno",g:"P"},{n:"Javier Arroyo",g:"P"},
-  {n:"LD Services Spain 24",g:"P"},{n:"Madrid Real Prop",g:"P"},{n:"Mobelfis",g:"P"},
-  {n:"Orbis Tecnología",g:"P"},{n:"PROSOCAM",g:"P"},{n:"Pryconsa",g:"P"},
-  {n:"Riego 24 Real Estate",g:"P"},{n:"RRB",g:"P"},{n:"SE92",g:"P"},{n:"SIT Spain",g:"P"},
-  {n:"Sunroad",g:"P"},{n:"Tatiana",g:"P"},{n:"Tramer Atlantic / Quintero",g:"P"},
-  {n:"VB Global Group",g:"P"},{n:"— pendiente —",g:"P"},
-  {n:"Alcalá 254 Project",g:"A"},{n:"PF · Alexia",g:"A"},{n:"PF · Andy Orchansky",g:"A"},
-  {n:"Bluebait",g:"A"},{n:"Bratenia",g:"A"},{n:"Cardenete",g:"A"},{n:"Castañeda",g:"A"},
-  {n:"Catastro",g:"A"},{n:"Charenten",g:"A"},{n:"David Sainz",g:"A"},{n:"David Von Rosen",g:"A"},
-  {n:"Eranovum",g:"A"},{n:"PF · Familia Clariana",g:"A"},{n:"Financa",g:"A"},
-  {n:"Fomento Territorial",g:"A"},{n:"Galium GP",g:"A"},{n:"Galium Spain I",g:"A"},
-  {n:"González de Córdoba 16",g:"A"},{n:"Gómez de Cuenca",g:"A"},{n:"Italy Real Advisers",g:"A"},
-  {n:"Jaruvia",g:"A"},{n:"José Ramón Jover",g:"A"},{n:"Maga",g:"A"},
-  {n:"PF · Marko Rajamaa",g:"A"},{n:"Narváez Robna",g:"A"},{n:"Nexwell",g:"A"},
-  {n:"Oriol usufructo",g:"A"},{n:"PremiumMixes",g:"A"},{n:"PF · Rafael Merry del Val",g:"A"},
-  {n:"Rocabert-Oriol",g:"A"},{n:"ThirdWay Partners",g:"A"},{n:"Velázquez 157 IBT",g:"A"},
-  {n:"Villalba",g:"A"},{n:"Waterloo",g:"A"},{n:"Xiquena",g:"A"},
-  {n:"A2CL Tecnología",g:"R"},{n:"Barmar Siete",g:"R"},{n:"PF · Borja Moreno",g:"R"},
-  {n:"Familia Collantes",g:"R"},{n:"PF · Guy Shahar",g:"R"},{n:"PF · Héctor Nieto",g:"R"},
-  {n:"Navantia extra",g:"R"},{n:"PF · Pedro Gómez Balboa",g:"R"},{n:"PF · Pedro Peña",g:"R"},
-  {n:"Testamentaría Alcázar",g:"R"},{n:"Banús testamentaría",g:"R"},{n:"Tornos",g:"R"},
-  {n:"Zeller",g:"R"},
-];
-let clientesExtra=[];
-// Lista plana para compatibilidad con código existente
-const CLIENTES = CLIENTES_DEF.map(x=>x.n);
+const CLIENTES = ["— pendiente —","A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
 const TAREAS = ["Análisis, consulta, revisión e investigación tributaria / mercantil","Redacción de escritos y documentos","Reuniones y llamadas (Teams / presencial)","Coordinación, gestión y correspondencia con cliente","Desarrollo de negocio y gestión del despacho"];
-const IGUALAS = new Set(["Argis","Casacuberta","Pryconsa","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
+const IGUALAS = new Set(["Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Casacuberta","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
 const SPECIAL = {PROSOCAM:225,"Javier Arroyo":225,Castañeda:275};
 
 const data = [
@@ -214,7 +199,7 @@ async function getToken(){
 }
 async function leerFechas(token,nombre){
   try{
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/01HKXGZ6HO27HFTWFAGJDZBUDOC6JHENTE`,{headers:{Authorization:`Bearer ${token}`}});
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r1.ok)return[];
     const item=await r1.json();
     const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
@@ -269,20 +254,19 @@ async function iniciarSesion(){
   }
 }
 function getTarifa(c,a){const ab=a||(currentUser?currentUser.nombreDespacho:"");if(c&&SPECIAL[c])return SPECIAL[c];return TARIFAS[ab]||450;}
-function cOpts(sel){const prio=CLIENTES_DEF.filter(x=>x.g==="P");const alfa=CLIENTES_DEF.filter(x=>x.g==="A").sort((a,b)=>a.n.localeCompare(b.n,"es"));const resi=CLIENTES_DEF.filter(x=>x.g==="R").sort((a,b)=>a.n.localeCompare(b.n,"es"));const extra=clientesExtra.map(n=>({n,g:"X"}));let h=`<optgroup label="── Prioritarios ──">`+prio.map(c=>`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`).join("")+"</optgroup>";h+=`<optgroup label="── Alfabéticos ──">`+alfa.map(c=>`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`).join("")+"</optgroup>";h+=`<optgroup label="── Residuales ──">`+resi.map(c=>`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`).join("")+"</optgroup>";if(extra.length)h+=`<optgroup label="── Añadidos ──">`+extra.map(c=>`<option value="${c.n}"${sel===c.n?" selected":""}>${c.n}</option>`).join("")+"</optgroup>";h+=`<option value="__nuevo__">+ Añadir cliente nuevo...</option>`;return h;}
+function cOpts(sel){return CLIENTES.map(c=>`<option value="${c}"${sel===c?" selected":""}>${c}</option>`).join("")}
 function tOpts(sel){return TAREAS.map(t=>`<option value="${t}"${sel===t?" selected":""}>${t}</option>`).join("")}
 function rowsHtml(bid,rows){
   return rows.map(r=>{
     const pc=r.p?"pending":"";const badge=r.p?`<span class="badge-p">pendiente</span>`:"";
-    const rf=r.f||new Date().toISOString().split("T")[0];
-    return `<tr class="row-main ${pc}" id="rm-${r.id}"><td><input type="date" value="${rf}" style="font-size:10px;width:100%;background:transparent;border:0.5px solid transparent;border-radius:4px;padding:3px 4px;color:#555;font-family:inherit" onchange="refresh()"></td><td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}<div id="nc-${r.id}" style="display:none;margin-top:3px;display:none"><input id="nci-${r.id}" placeholder="Nombre del cliente..." style="font-size:11px;border:0.5px solid #999;border-radius:4px;padding:3px 5px;font-family:inherit;width:70%"><button onclick="confirmarNuevoCliente('${bid}','${r.id}')" style="font-size:10px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;margin-left:3px">OK</button></div></td><td><select onchange="refresh()">${tOpts(r.t)}</select></td><td><input type="number" min="0" max="600" value="${r.m}" oninput="refresh()"></td><td></td><td><button class="del-btn" onclick="delRow('${bid}','${r.id}')">×</button></td></tr>
-    <tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="5" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;
+    return `<tr class="row-main ${pc}" id="rm-${r.id}"><td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}</td><td><select onchange="refresh()">${tOpts(r.t)}</select></td><td><input type="number" min="0" max="600" value="${r.m}" oninput="refresh()"></td><td></td><td><button class="del-btn" onclick="delRow('${bid}','${r.id}')">×</button></td></tr>
+    <tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="4" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;
   }).join("");
 }
 function blockHtml(b){
   return `<div class="block"><div class="block-header"><span class="block-title" style="color:${b.color}">${b.label}</span><span class="block-mins" id="bm-${b.bid}"></span></div>
-  <table><colgroup><col style="width:100px"><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
-  <thead><tr><th>Fecha</th><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
+  <table><colgroup><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
+  <thead><tr><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
   <tbody id="tb-${b.bid}">${rowsHtml(b.bid,b.rows)}</tbody></table>
   <button class="add-btn" onclick="addRow('${b.bid}')">+ Añadir fila</button></div>`;
 }
@@ -303,29 +287,16 @@ function refresh(){
   document.getElementById("sum-rows").innerHTML=html;
 }
 function onC(bid,rid,val){
-  if(val==="__nuevo__"){const nc=document.getElementById("nc-"+rid);if(nc)nc.style.display="block";return;}
   const b=data.find(x=>x.bid===bid);if(!b)return;const r=b.rows.find(x=>x.id===rid);if(!r)return;
   r.p=(val==="— pendiente —");
   ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");});
   const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display=r.p?"":"none";refresh();
 }
-function confirmarNuevoCliente(bid,rid){
-  const input=document.getElementById("nci-"+rid);if(!input)return;
-  const nombre=input.value.trim();if(!nombre)return;
-  if(!clientesExtra.includes(nombre))clientesExtra.push(nombre);
-  const tr=document.getElementById("rm-"+rid);if(!tr)return;
-  const sel=tr.querySelector("select");if(sel){sel.innerHTML=cOpts(nombre);sel.value=nombre;}
-  const nc=document.getElementById("nc-"+rid);if(nc)nc.style.display="none";
-  const b=data.find(x=>x.bid===bid);if(b){const r=b.rows.find(x=>x.id===rid);if(r){r.p=false;r.c=nombre;}}
-  ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim();});
-  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display="none";
-  refresh();
-}
-function cerrarYBloquear(){document.getElementById("overlay").style.display="none";const cb=document.getElementById("btn-confirm");cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";}
-window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
+function delRow(bid,rid){const b=data.find(x=>x.bid===bid);if(!b)return;b.rows=b.rows.filter(x=>x.id!==rid);["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(el)el.remove();});refresh();}
+function addRow(bid){const b=data.find(x=>x.bid===bid);if(!b)return;const id="e"+rc++;const nr={id,c:"— pendiente —",t:TAREAS[3],m:0,d:"",p:true};b.rows.push(nr);const tb=document.getElementById("tb-"+bid);const tmp=document.createElement("tbody");tmp.innerHTML=rowsHtml(bid,[nr]);Array.from(tmp.children).forEach(tr=>tb.appendChild(tr));refresh();}
 function getRows(){
   const rows=[];
-  data.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");const dateInp=tr.querySelector("input[type=date]");const rdesc=tr.nextElementSibling;const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";const fecha=dateInp?dateInp.value:new Date().toISOString().split("T")[0];rows.push({fecha,cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});});});
+  data.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");const rdesc=tr.nextElementSibling;const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";rows.push({cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});});});
   return rows;
 }
 function abrirResumen(){
@@ -353,15 +324,16 @@ async function guardarEnSharePoint(){
   const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/01HKXGZ6HO27HFTWFAGJDZBUDOC6JHENTE`,{headers:{Authorization:`Bearer ${token}`}});
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r1.ok)throw new Error(`No se pudo acceder al archivo (${r1.status}). Verifica que existe en SharePoint en la carpeta Time report antiguos.`);
     const item=await r1.json();const itemId=item.id;
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
-    const ab=currentUser.nombreDespacho;
+    const fechaImportada=document.getElementById("import-bar")?.dataset?.fecha;
+    const fecha=fechaImportada||new Date().toISOString().split("T")[0];const ab=currentUser.nombreDespacho;
     let ok=0,fail=0;
     for(const r of rows){
-      const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;
-      const body={values:[[r.fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,"No"]]};
+      const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;const ig=IGUALAS.has(r.cliente)?"Sí":"No";
+      const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,"No"]]};
       const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
       if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
     }
@@ -373,6 +345,67 @@ async function guardarEnSharePoint(){
   }catch(e){btn.disabled=false;btn.innerHTML="Guardar en SharePoint";document.getElementById("modal").insertAdjacentHTML("afterbegin",`<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);}
 }
 function cerrarYBloquear(){document.getElementById("overlay").style.display="none";const cb=document.getElementById("btn-confirm");cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";}
+
+/* ─────────────────────────────────────────────────────────────────
+   IMPORTACIÓN DESDE ASISTENTE DE CHAT
+   Formato JSON esperado (FIJO — no cambiar):
+   {
+     "version": "1",
+     "fecha": "2026-04-17",
+     "abogado": "Luis Ugarte Rebollo",
+     "filas": [
+       {
+         "cliente": "Fernando Morientes",
+         "tarea": "Coordinación, gestión y correspondencia con cliente",
+         "minutos": 10,
+         "descripcion": "Alfonso Gómez / Fermosan — burofax arrendamiento",
+         "bloque": "facturable"   // "facturable" | "iguala" | "otro"
+       }
+     ]
+   }
+───────────────────────────────────────────────────────────────── */
+function importarDesdeAsistente(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const json=JSON.parse(e.target.result);
+      if(!json.filas||!Array.isArray(json.filas))throw new Error("El archivo no tiene el formato correcto (falta el campo 'filas').");
+      if(json.abogado&&currentUser&&json.abogado!==currentUser.nombreDespacho){
+        if(!confirm(`Este archivo fue preparado para ${json.abogado}, pero has iniciado sesión como ${currentUser.nombreDespacho}. ¿Deseas importarlo igualmente?`))return;
+      }
+      const mapBloque={facturable:"b1",iguala:"b2",otro:"b3"};
+      data.forEach(b=>{b.rows=[];});
+      let cImport=0;
+      json.filas.forEach((f,i)=>{
+        const bid=mapBloque[f.bloque||"facturable"]||"b1";
+        const b=data.find(x=>x.bid===bid);
+        if(!b)return;
+        const clienteValido=CLIENTES.includes(f.cliente)?f.cliente:"— pendiente —";
+        const tareaValida=TAREAS.includes(f.tarea)?f.tarea:TAREAS[3];
+        const id="imp"+(rc++);
+        b.rows.push({id,c:clienteValido,t:tareaValida,m:parseInt(f.minutos)||0,d:f.descripcion||"",p:(clienteValido==="— pendiente —")});
+        cImport++;
+      });
+      render();
+      const fechaTxt=json.fecha?` · ${json.fecha}`:"";
+      const importBar=document.getElementById("import-bar");
+      if(json.fecha)importBar.dataset.fecha=json.fecha;
+      importBar.innerHTML=`<div class="import-success"><strong>${cImport} entradas importadas correctamente${fechaTxt}.</strong> Revisa los minutos, ajusta si es necesario y pulsa "Confirmar horas del día".</div>`;
+      if(json.fecha){
+        const hoy=new Date().toISOString().split("T")[0];
+        if(json.fecha!==hoy){
+          document.getElementById("top-alerts").insertAdjacentHTML("afterbegin",`<div class="alert"><strong>Atención:</strong> el archivo importado corresponde al <strong>${json.fecha}</strong>, no a hoy (${hoy}). Verifica que es correcto antes de guardar.</div>`);
+        }
+      }
+    }catch(err){
+      alert("Error al leer el archivo: "+err.message);
+    }
+    input.value="";
+  };
+  reader.readAsText(file,"UTF-8");
+}
 window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
 </script>
 </body>
