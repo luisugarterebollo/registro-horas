@@ -545,7 +545,33 @@ function importarDesdeAsistente(input){
   reader.readAsText(file,"UTF-8");
 }
 
-window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
+window.addEventListener("load",async()=>{
+  try{
+    await msalInstance.initialize();
+    await msalInstance.handleRedirectPromise();
+    const accounts=msalInstance.getAllAccounts();
+    if(accounts.length>0){
+      currentUser=accounts[0];
+      const email=currentUser.username.toLowerCase();
+      const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
+      currentUser.nombreDespacho=nombre;
+      document.getElementById("topbar-user").textContent=nombre;
+      document.getElementById("login-screen").style.display="none";
+      document.getElementById("loading-screen").style.display="flex";
+      const token=await getToken();
+      const fechas=await leerFechas(token,nombre);
+      const pendientes=diasPendientes(fechas);
+      document.getElementById("loading-screen").style.display="none";
+      document.getElementById("app-screen").style.display="block";
+      const hoy=new Date();
+      const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+      const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+      document.getElementById("day-header").innerHTML=`<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong> · ${nombre} · ${getTarifa(null,nombre)} €/h`;
+      mostrarPendientes(pendientes);
+      render();
+    }
+  }catch(e){}
+});
 </script>
 </body>
 </html>
