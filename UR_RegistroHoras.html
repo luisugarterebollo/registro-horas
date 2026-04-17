@@ -135,7 +135,8 @@ input[type=number]{text-align:center;font-weight:500}
    ════════════════════════════════════════════════════════════════ */
 const CLIENT_ID   = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
 const TENANT_ID   = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
-const DRIVE_ID    = "b!Fu6kgYAKhUqhkII5KIkNPTcjqldbZ89Dl7n7Rk6aKG9CuHEfMwBZR49lcIVyWc8U";
+const DRIVE_ID    = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
+const ITEM_ID     = "01HKXGZ6HO27HFTWFAGJDZBUDOC6JHENTE";
 const TABLE_NAME  = "TimeReport";
 const XLSX_PATH   = "Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Time%20report%20antiguos/UR_Registro_Horas_v2_2.xlsx";
 const REDIRECT_URI= "https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
@@ -236,10 +237,7 @@ async function getToken(){
 /* ── Lectura de fechas ya registradas en SharePoint ── */
 async function leerFechas(token,nombre){
   try{
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${XLSX_PATH}`,{headers:{Authorization:`Bearer ${token}`}});
-    if(!r1.ok)return[];
-    const item=await r1.json();
-    const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
+    const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${ITEM_ID}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r2.ok)return[];
     const d2=await r2.json();
     const fechas=new Set();
@@ -457,9 +455,7 @@ async function guardarEnSharePoint(){
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
   try{
     const token=await getToken();
-    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${XLSX_PATH}`,{headers:{Authorization:`Bearer ${token}`}});
-    if(!r1.ok)throw new Error(`No se pudo acceder al archivo (${r1.status}). Verifica que existe en SharePoint.`);
-    const item=await r1.json();const itemId=item.id;
+    const itemId=ITEM_ID;
     const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");
     const fecha=fechaImportada||new Date().toISOString().split("T")[0];
     const ab=currentUser.nombreDespacho;
