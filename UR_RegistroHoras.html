@@ -32,9 +32,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f1;color:#1a1a1
 .pending-days p{font-size:12px;color:#8a5700;line-height:1.5}
 .days-list{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
 .day-chip{background:#fff;border:0.5px solid #f5a623;border-radius:20px;padding:3px 10px;font-size:11px;color:#b7640a}
-.cargar-btn{width:100%;padding:10px;background:#185fa5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:1.25rem}
-.cargar-btn:hover{background:#0c447c}
-.cargar-btn:disabled{opacity:0.5;cursor:not-allowed}
 .block{background:#fff;border:0.5px solid #ddd;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
 .block-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#f7f7f5;border-bottom:0.5px solid #ddd}
 .block-title{font-size:12px;font-weight:500}
@@ -56,7 +53,6 @@ input[type=number]{text-align:center;font-weight:500}
 .del-btn{background:none;border:none;cursor:pointer;color:#bbb;font-size:13px;padding:2px 4px;border-radius:3px;line-height:1;display:block;margin:auto}
 .del-btn:hover{color:#c0392b;background:#fdf0ef}
 .badge-p{font-size:9px;background:#fef9ec;color:#b7640a;border:0.5px solid #f5a623;border-radius:3px;padding:1px 4px;margin-left:4px}
-.badge-cal{font-size:9px;background:#eaf2fb;color:#185fa5;border:0.5px solid #b5d4f4;border-radius:3px;padding:1px 4px;margin-left:4px}
 .add-btn{display:block;width:calc(100% - 28px);margin:7px 14px;font-size:11px;color:#888;background:none;border:0.5px dashed #ccc;border-radius:6px;padding:5px 10px;cursor:pointer;text-align:left}
 .add-btn:hover{color:#1a1a1a;border-color:#999}
 .summary-wrap{background:#f7f7f5;border:0.5px solid #ddd;border-radius:12px;padding:0.875rem 1.125rem;margin-bottom:1rem}
@@ -85,26 +81,25 @@ input[type=number]{text-align:center;font-weight:500}
 </head>
 <body>
 <div class="topbar">
-  <span class="topbar-title">U&amp;R Abogados · Registro de Horas</span>
+  <span class="topbar-title">U&R Abogados · Registro de Horas</span>
   <span class="topbar-user" id="topbar-user"></span>
 </div>
 <div id="login-screen">
   <div class="login-card">
     <h1>Registro de Horas</h1>
-    <p>Inicia sesión con tu cuenta de Microsoft 365 del despacho para registrar tus horas.</p>
+    <p>Inicia sesión con tu cuenta de Microsoft 365 del despacho para registrar tus horas y guardarlas en SharePoint.</p>
     <button class="btn-login" id="btn-login" onclick="iniciarSesion()">Iniciar sesión con Microsoft</button>
     <p id="login-error" style="color:#c00;font-size:11px;margin-top:12px;display:none"></p>
   </div>
 </div>
 <div id="loading-screen">
   <div class="spinner-lg"></div>
-  <div class="loading-text" id="loading-text">Cargando...</div>
+  <div class="loading-text" id="loading-text">Comprobando días registrados...</div>
 </div>
 <div id="app-screen" style="display:none">
   <div class="wrap">
     <div class="day-header" id="day-header"></div>
     <div id="pending-days-section"></div>
-    <div style="display:flex;gap:8px;margin-bottom:1.25rem;align-items:center"><button class="cargar-btn" id="btn-cargar" onclick="cargarHoras()" style="margin-bottom:0;flex:1">📥 Cargar mis horas</button><input type="date" id="fecha-cargar" style="padding:8px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;background:#fff;color:#1a1a1a" title="Cargar horas de otra fecha"></div>
     <div id="top-alerts"></div>
     <div id="blocks"></div>
     <div class="summary-wrap">
@@ -118,64 +113,226 @@ input[type=number]{text-align:center;font-weight:500}
   <div class="modal" id="modal"></div>
 </div>
 <script>
-const CLIENT_ID="147b9c27-c780-4b76-b51b-d3a21fb3697c";
-const TENANT_ID="9a5829b8-47d0-4b24-b657-ef023fee7d5b";
-const DRIVE_ID="b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
-const ITEM_ID="01HKXGZ6HO27HFTWFAGJDZBUDOC6JHENTE";
-const TABLE_NAME="Horas";
-const REDIRECT_URI="https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
-const SCOPES=["https://graph.microsoft.com/Files.ReadWrite.All","https://graph.microsoft.com/Sites.ReadWrite.All","https://graph.microsoft.com/User.Read","https://graph.microsoft.com/Mail.Read","https://graph.microsoft.com/Calendars.Read"];
-const msalConfig={auth:{clientId:CLIENT_ID,authority:`https://login.microsoftonline.com/${TENANT_ID}`,redirectUri:REDIRECT_URI},cache:{cacheLocation:"localStorage",storeAuthStateInCookie:true}};
-const msalInstance=new msal.PublicClientApplication(msalConfig);
-let currentUser=null;
-const EMAILS_ABOGADOS={"luis@ugarterebolloabogados.com":"Luis Ugarte Rebollo","c.pastrana@ugarterebolloabogados.com":"Carlos Pastrana","javier@ugarterebolloabogados.com":"Javier Parejas Valls","m.rico@ugarterebolloabogados.com":"Mafer Rico","m.hernandez@ugarterebolloabogados.com":"Miriam Hernández Retortillo","m.alcantarilla@ugarterebolloabogados.com":"Mariano Alcantarilla de Lamo","contabilidad@ugarterebolloabogados.com":"Susana Carracedo"};
-const TARIFAS={"Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,"Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,"Susana Carracedo":60};
-const CP=["Grupo Argis","ARA Capital","BC Nonwovens","Casacuberta","Familia Collantes","Fernando Morientes","Fundación Tatiana / Inversiones Tirema","Furia Homes","Grupo Casacuberta","Grupo Pryconsa","Ibexia","Interno","Javier Arroyo","LD Services Spain 24","Madrid Real Prop","Mobelfis","Orbis Tecnología","PROSOCAM","Riego 24 Real Estate","RRB","SE92","SIT Spain","Sunroad","Tramer Atlantic / Quintero","VB Global Group","— pendiente —"];
-const CA=["Alcalá 254","Alexia","Albergue Oporto","Andy Orchansky","Atlas Medical","Bluebait","Bocanegra","Bratenia","Cardenete","Castañeda","Catastro","Charenten","David Sainz","David Von Rosen","Eranovum","Familia Clariana","Financa","Fomento Territorial","Fynbos Capital","Galium GP","Galium Spain I","Gesprofit","Global Mobility","González de Córdoba 16","Gómez de Cuenca","Inverlasa","Italy Real Advisers","Profit","Jaruvia","José Ramón Jover","Latam Capital Advisors","Maga","Marko Rajamaa","Narváez Robna","Nexwell","Oriol usufructo","PremiumMixes","Rafael Merry del Val","Rocabert-Oriol","TES Várez","ThirdWay Partners","Velázquez 157 IBT","Villalba","Waterloo","Xiquena"];
-const CR=["A2CL","Barmar Siete","Borja Moreno","Guy Shahar","Héctor Nieto","Navantia extra","Pedro Gómez Balboa","Pedro Peña","Testamentaría Alcázar","Banús testamentaría","Tornos","Zeller"];
-const TODOS=[...CP,...CA,...CR];
-const TAREAS=["Análisis, consulta, revisión e investigación tributaria / mercantil","Redacción de escritos y documentos","Reuniones y llamadas (Teams / presencial)","Coordinación, gestión y correspondencia con cliente","Desarrollo de negocio y gestión del despacho"];
-const IGUALAS=new Set(["Grupo Argis","Grupo Casacuberta","Grupo Pryconsa","Casacuberta","BC Nonwovens","Bratenia","Fernando Morientes","Furia Homes","Ibexia","Mobelfis","Orbis Tecnología"]);
-const SPECIAL={PROSOCAM:225,"Javier Arroyo":225,"Castañeda":275};
-const DOMAIN_MAP={"argis.es":"Grupo Argis","casacuberta.com":"Grupo Casacuberta","pryconsa.es":"Grupo Pryconsa","prygesa.es":"Grupo Pryconsa","islacanela.es":"Grupo Pryconsa","saintcroixhi.com":"Grupo Pryconsa","ceeh.es":"Grupo Pryconsa","vbtravelgroup.com":"VB Global Group","sunroadenterprises.com":"Sunroad","mobelfis.com":"Mobelfis","orbis.es":"Orbis Tecnología","global-bcn.com":"BC Nonwovens","trameratlantic.com":"Tramer Atlantic / Quintero","qstars.com.co":"Tramer Atlantic / Quintero","be2in.es":"SE92","grupocox.com":"Ibexia","provalixhomes.com":"BC Nonwovens","nexwellpower.com":"Nexwell","fundacionjuan23.org":"Javier Arroyo","backsteen.es":"Fynbos Capital","gesprofit.es":"Gesprofit","inverlasa.es":"Inverlasa","ugarterebolloabogados.com":"Interno"};
-const EMAIL_MAP={"enia.elorz@gmail.com":"Bratenia","mrajamaa@yahoo.com":"Marko Rajamaa","jmateo@saintcroixhi.com":"Grupo Pryconsa","fernanmori9@gmail.com":"Fernando Morientes","jarroyo@fundacionjuan23.org":"Javier Arroyo","borja@ibexiadv.com":"Nexwell","brett@nexwell.com":"Nexwell","bmoragues@nexwellpower.com":"Nexwell","borja.moragues.ext@grupocox.com":"Nexwell","ai@itswm.com":"RRB","ep@itswm.com":"RRB","v.zorita@backsteen.es":"Fynbos Capital","vruizlafita@hotmail.es":"Inverlasa"};
-// ARA Capital: interlocutoras en Fomento Territorial → ARA Capital o sociedad concreta según asunto
-const ARA_CONTACTS=new Set(["m.delapuerta@fomentoterritorial.com","a.delalcazar@fomentoterritorial.com","f.slamadrid@fomentoterritorial.com"]);
-const ARA_SOCIEDADES=[[/galium\s*gp/i,"Galium GP"],[/galium\s*spain/i,"Galium Spain I"],[/alcal[aá]\s*254/i,"Alcalá 254"],[/charenten/i,"Charenten"],[/gonz[aá]lez\s+de\s+c[oó]rdoba/i,"González de Córdoba 16"],[/madrid\s*real\s*prop/i,"Madrid Real Prop"],[/italy\s*real/i,"Italy Real Advisers"],[/ld\s*services/i,"LD Services Spain 24"],[/riego\s*24/i,"Riego 24 Real Estate"],[/sunroad/i,"Sunroad"]];
-function araDesdeAsunto(a){for(const[re,c] of ARA_SOCIEDADES){if(re.test(a||""))return c;}return "ARA Capital";}
-// Fallback por asunto cuando los destinatarios no permiten identificar cliente
-const SUBJECT_MAP=[[/\bARA\b/,"ARA Capital"],[/atlas\s*medical/i,"Atlas Medical"],[/inverlasa|europroperty/i,"Inverlasa"],[/latam\s*capital|casa\s*ausias|\bLV\s?24\b/i,"Latam Capital Advisors"],[/v[aá]rez/i,"TES Várez"],[/bocanegra|zoddak/i,"Bocanegra"]];
-function clienteFromAsunto(a){a=a||"";for(const[re,c] of SUBJECT_MAP){if(re.test(a))return c;}return null;}
-const dataBloques=[{bid:"b1",label:"Honorarios facturables",color:"#185fa5",rows:[]},{bid:"b2",label:"Igualas",color:"#0f6e56",rows:[]},{bid:"b3",label:"Pendiente / Interno / Otros",color:"#b7640a",rows:[]}];
+const CLIENT_ID  = "147b9c27-c780-4b76-b51b-d3a21fb3697c";
+const TENANT_ID  = "9a5829b8-47d0-4b24-b657-ef023fee7d5b";
+const DRIVE_ID   = "b!p7KcVwtwqEu6oVKsQhFKi5OvpHZMXQVCtjiNakc5vvEgB9OWUXV_Spz39x-7WJfw";
+const SITE_ID    = "ugarterebolloabogados.sharepoint.com,579c92a7-7030-4ba8-baa1-52ac42114a8b,7664af93-5d4c-45c0-b738-8d6a4739beef";
+const FILE_PATH  = "Documentos compartidos/Gestión del conocimiento/Time report antiguos/TR 2026_UR.xlsx";
+const TABLE_NAME = "TimeReport";
+const REDIRECT_URI = "https://luisugarterebollo.github.io/registro-horas/UR_RegistroHoras.html";
+const SCOPES = ["https://graph.microsoft.com/Files.ReadWrite.All","https://graph.microsoft.com/Sites.ReadWrite.All","https://graph.microsoft.com/User.Read"];
+
+const msalConfig = {
+  auth:{ clientId:CLIENT_ID, authority:`https://login.microsoftonline.com/${TENANT_ID}`, redirectUri:REDIRECT_URI },
+  cache:{ cacheLocation:"localStorage", storeAuthStateInCookie:true }
+};
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let currentUser = null;
+
+const EMAILS_ABOGADOS = {
+  "luis@ugarterebolloabogados.com":"Luis Ugarte Rebollo",
+  "c.pastrana@ugarterebolloabogados.com":"Carlos Pastrana",
+  "javier@ugarterebolloabogados.com":"Javier Parejas Valls",
+  "m.rico@ugarterebolloabogados.com":"Mafer Rico",
+  "m.hernandez@ugarterebolloabogados.com":"Miriam Hernández Retortillo",
+  "m.alcantarilla@ugarterebolloabogados.com":"Mariano Alcantarilla de Lamo",
+  "contabilidad@ugarterebolloabogados.com":"Susana Carracedo"
+};
+const TARIFAS = {"Luis Ugarte Rebollo":450,"Carlos Pastrana":275,"Javier Parejas Valls":275,"Mafer Rico":175,"Miriam Hernández Retortillo":175,"Mariano Alcantarilla de Lamo":175,"Susana Carracedo":60};
+
+/* Clientes: sin prefijo "Grupo", ordenados alfabéticamente (criterio español). "— pendiente —" siempre primero. */
+const PEND = "— pendiente —";
+const LISTA_CLIENTES = ["A2CL Tecnología","Alcalá 254 Project","Alexia","Albergue Oporto","Andy Orchansky","Antiguo Europeo","Antonio Collantes","Alfonso Collantes","Aplicaciones Comerciales 810","AOFI Holdings","AOFI Pozuelo","AOFI Sheni Socimi","AREFII Formula One","ARA Capital","Argis","Barmar","Barmar Siete","BC Nonwovens","Bluebait","Borja Moreno","Bratenia","Cardenete","Carlos Augusto Quintero","Casacuberta","Castañeda","Charenten","David Sainz","David Von Rosen","Durazno Inversiones","Eranovum","Familia Clariana","Ferpevir","Financa","Fernando Morientes","Fomento Territorial","Galium GP","Galium Spain I","González de Córdoba 16","Gómez de Cuenca","Guy Shahar","Héctor Nieto","Ibexia","Italy Real Advisers","ITS Wealth Management","Jaruvia","Javier Arroyo","José Ramón Jover","KP Investments / Red Rhino Banús","LD Services Spain 24","Madrid Real Prop","Maga","Mobelfis","Narváez Robna","Navantia extra","Nexwell","Orbis Tecnología","Oriol usufructo","Pedro Gómez Balboa","Pedro Peña","PremiumMixes","PROSOCAM","Proyecto Catastro","Pryconsa","Rafael Merry del Val","Riego 24 Real Estate","Rocabert-Oriol","SE92","SENA","SIT Spain","Sunroad","Testamentaría Alcázar","Banús testamentaría","ThirdWay Partners","Tornos","Tramer Atlantic","Urkiola Socimi","VB Global Group","Velázquez 157 IBT","Villalba","Waterloo","Xiquena","Zeller","Interno"];
+const COLLATOR = new Intl.Collator("es",{sensitivity:"base"});
+const CLIENTES = [PEND, ...[...new Set(LISTA_CLIENTES)].sort(COLLATOR.compare)];
+
+const TAREAS = ["Análisis, consulta, revisión e investigación tributaria / mercantil","Redacción de escritos y documentos","Reuniones y llamadas (Teams / presencial)","Coordinación, gestión y correspondencia con cliente","Desarrollo de negocio y gestión del despacho"];
+/* Tarea por defecto: eventos de calendario → Reuniones y llamadas; resto → Análisis */
+function tareaDefecto(ev){return ev?TAREAS[2]:TAREAS[0];}
+
+const IGUALAS = new Set(["Argis","Casacuberta","Pryconsa","BC Nonwovens","Bratenia","Ibexia","Mobelfis","Orbis Tecnología"]);
+const SPECIAL = {PROSOCAM:225,"Javier Arroyo":225,Castañeda:275};
+
+/* Entradas del día — lista única, sin agrupar por tipo de cliente.
+   ev:true marca eventos de calendario. Si una fila no trae tarea (t), se aplica tareaDefecto(). */
+let entries = [
+  {id:"e1",c:"Argis",t:TAREAS[3],m:20,d:"Selaya - Finance Documents (2 emails) — RV equipo + RV Pastrana con adjunto",p:false},
+  {id:"e2",c:"Javier Arroyo",t:TAREAS[0],m:75,d:"Notificación / préstamos / libros / tasación + Inspección Javier (4 emails) — análisis notificación electrónica, préstamos socios, libros, tasación",p:false},
+  {id:"e3",c:"Pryconsa",t:TAREAS[1],m:45,d:"Percepciones dinerarias trabajadores portugueses - Isla Canela (1 email + adjunto) — CDI hispano-portugués, certificados residencia fiscal",p:false},
+  {id:"e4",c:"VB Global Group",t:TAREAS[3],m:30,d:"VIAJABIEN - Propuesta aportación a Holding (2 emails) — kick-off Fase I/II + seguimiento CCAA",p:false},
+  {id:"e5",c:"BC Nonwovens",t:TAREAS[1],m:45,d:"REA VIFERME IS 2018-2021 + Pago Fraccionado 1P-2026 (2 emails + adjunto) — cálculo pago fraccionado IS grupo fiscal 5/26",p:false},
+  {id:"e6",c:"Argis",t:TAREAS[0],m:60,d:"Financiación Torre Sevilla (2 emails) — comentarios fiscales mark-up CMS + instrucciones al equipo",p:false},
+  {id:"e7",c:"Casacuberta",t:TAREAS[1],m:60,d:"CAVISL: comunicación no gran empresa 2026 (1 email + adjunto) — análisis IVA art. 20.Uno.18º LIVA, Modelo 303",p:false},
+  {id:"e8",c:"Casacuberta",t:TAREAS[0],m:60,d:"Inspección IS 2021-2024 exención reinversión (1 email + adjunto) — análisis sanciones, reducción conformidad pronto pago",p:false},
+  {id:"e9",c:PEND,m:10,d:"PVX Santa Anna SL: consulta tributación venta local — email interno al equipo (asigna cliente)",p:true},
+  {id:"e10",c:PEND,m:10,d:"Título familia numerosa — destinatarios sin cliente identificado (asigna o elimina si personal)",p:true},
+  {id:"e11",c:PEND,m:5,d:"Notificación TEAR Jorge Calvo — cliente no identificado (asigna)",p:true},
+  {id:"e12",c:"Interno",t:TAREAS[4],m:5,d:"Borradores impuestos UR 1ºT — respuesta muy corta a Susana",p:false},
+].map(r=>({...r,t:r.t||tareaDefecto(r.ev)}));
+
 let rc=50;
 function esLaborable(d){return d.getDay()>=1&&d.getDay()<=5;}
-function diasPendientes(reg){const hoy=new Date();hoy.setHours(0,0,0,0);const s=new Set(reg);const lista=[];for(let i=1;i<=30;i++){const d=new Date(hoy);d.setDate(hoy.getDate()-i);if(!esLaborable(d))continue;const k=d.toISOString().split("T")[0];if(s.has(k))break;lista.push(d);if(lista.length>=10)break;}return lista.reverse();}
+function diasPendientes(reg){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const s=new Set(reg);const lista=[];
+  for(let i=1;i<=30;i++){
+    const d=new Date(hoy);d.setDate(hoy.getDate()-i);
+    if(!esLaborable(d))continue;
+    const k=d.toISOString().split("T")[0];
+    if(s.has(k))break;
+    lista.push(d);if(lista.length>=10)break;
+  }
+  return lista.reverse();
+}
+async function getToken(){
+  if(!currentUser)throw new Error("No hay sesión activa");
+  try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}
+  catch(e){const r=await msalInstance.acquireTokenPopup({scopes:SCOPES,account:currentUser});return r.accessToken;}
+}
+async function leerFechas(token,nombre){
+  try{
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)return[];
+    const item=await r1.json();
+    const r2=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${item.id}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r2.ok)return[];
+    const d2=await r2.json();
+    const fechas=new Set();
+    for(const row of d2.value||[]){
+      const v=row.values[0];
+      if((v[1]||"").toString().toLowerCase().includes(nombre.split(" ")[0].toLowerCase())){
+        const f=(v[0]||"").toString().substring(0,10);if(f)fechas.add(f);
+      }
+    }
+    return[...fechas];
+  }catch(e){return[];}
+}
+function mostrarPendientes(dias){
+  const sec=document.getElementById("pending-days-section");
+  if(!dias||dias.length<3){sec.innerHTML="";return;}
+  const MM=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const chips=dias.map(d=>`<span class="day-chip">${d.getDate()} ${MM[d.getMonth()]}</span>`).join("");
+  sec.innerHTML=`<div class="pending-days"><h3>Días pendientes</h3><p><strong>Atención:</strong> llevas <strong>${dias.length} días laborables sin registrar</strong> horas.</p><div class="days-list">${chips}</div></div>`;
+}
+async function iniciarSesion(){
+  const btn=document.getElementById("btn-login");
+  const err=document.getElementById("login-error");
+  btn.disabled=true;btn.textContent="Conectando...";err.style.display="none";
+  try{
+    await msalInstance.initialize();
+    const resp=await msalInstance.loginPopup({scopes:SCOPES});
+    currentUser=resp.account;
+    const email=currentUser.username.toLowerCase();
+    const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;
+    currentUser.nombreDespacho=nombre;
+    document.getElementById("topbar-user").textContent=nombre;
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("loading-screen").style.display="flex";
+    const token=await getToken();
+    const fechas=await leerFechas(token,nombre);
+    const pendientes=diasPendientes(fechas);
+    document.getElementById("loading-screen").style.display="none";
+    document.getElementById("app-screen").style.display="block";
+    const hoy=new Date();
+    const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    document.getElementById("day-header").innerHTML=`<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong> · ${nombre} · ${getTarifa(null,nombre)} €/h`;
+    mostrarPendientes(pendientes);
+    render();
+  }catch(e){
+    btn.disabled=false;btn.textContent="Iniciar sesión con Microsoft";
+    err.style.display="block";err.textContent="Error: "+e.message;
+  }
+}
 function getTarifa(c,a){const ab=a||(currentUser?currentUser.nombreDespacho:"");if(c&&SPECIAL[c])return SPECIAL[c];return TARIFAS[ab]||450;}
-function clienteFromEmail(addr){addr=(addr||"").toLowerCase();if(EMAIL_MAP[addr])return EMAIL_MAP[addr];const dom=addr.split("@")[1];if(!dom)return null;if(DOMAIN_MAP[dom])return DOMAIN_MAP[dom];return null;}
-function clienteFromRecipients(recs,asunto){if(!recs||!recs.length)return clienteFromAsunto(asunto);for(const r of recs){const addr=((r.address||r)||"").toLowerCase();if(addr.includes("ugarterebolloabogados.com"))continue;if(ARA_CONTACTS.has(addr))return araDesdeAsunto(asunto);const c=clienteFromEmail(addr);if(c&&c!=="Interno")return c;}return clienteFromAsunto(asunto);}
-function limpiarAsunto(s){return(s||"").replace(/^(RE:|RV:|FW:|Re:|Fwd:|AW:)\s*/gi,"").trim();}
-function estimarMinutos(preview,hasAttach){if(!preview)return 15;const w=preview.split(/\s+/).length;if(w>200)return 75;if(w>80)return 45;if(hasAttach)return 30;if(w>40)return 20;const corto=/^(ok|de acuerdo|perfecto|lo vemos|gracias|entendido|confirmado|recibido|vale)/i.test(preview.trim());return(corto&&w<15)?5:10;}
-function cOpts(sel){const isManual=sel&&!TODOS.includes(sel)&&sel!=="— pendiente —";let h=`<optgroup label="── Prioritarios ──">`;CP.forEach(c=>{h+=`<option value="${c}"${sel===c?" selected":""}>${c}</option>`;});h+=`</optgroup><optgroup label="── Alfabéticos ──">`;CA.forEach(c=>{h+=`<option value="${c}"${sel===c?" selected":""}>${c}</option>`;});h+=`</optgroup><optgroup label="── Residuales ──">`;CR.forEach(c=>{h+=`<option value="${c}"${sel===c?" selected":""}>${c}</option>`;});h+=`</optgroup><optgroup label="── Otro ──"><option value="__manual__"${isManual?" selected":""}>✏️ Escribir cliente...</option></optgroup>`;return h;}
-function tOpts(sel){return TAREAS.map(t=>`<option value="${t}"${sel===t?" selected":""}>${t}</option>`).join("");}
-async function getToken(){if(!currentUser)throw new Error("No hay sesión activa");try{const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:currentUser});return r.accessToken;}catch(e){const r=await msalInstance.acquireTokenPopup({scopes:SCOPES,account:currentUser});return r.accessToken;}}
-async function leerFechas(token,nombre){try{const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${ITEM_ID}/workbook/tables/${TABLE_NAME}/rows`,{headers:{Authorization:`Bearer ${token}`}});if(!r.ok)return[];const d=await r.json();const f=new Set();for(const row of d.value||[]){const v=row.values[0];if((v[1]||"").toString().toLowerCase().includes(nombre.split(" ")[0].toLowerCase())){let raw=(v[0]||"");let k="";if(typeof raw==="number"&&raw>40000){const d=new Date(Math.round((raw-25569)*86400*1000));k=d.toISOString().split("T")[0];}else{const s=raw.toString().trim();if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){const p=s.split("/");k=p[2]+"-"+p[1]+"-"+p[0];}else{k=s.substring(0,10);}}if(k)f.add(k);}}return[...f];}catch(e){return[];}}
-function mostrarPendientes(dias){const sec=document.getElementById("pending-days-section");if(!dias||dias.length===0){sec.innerHTML="";return;}const MM=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];const chips=dias.map(d=>`<span class="day-chip">${d.getDate()} ${MM[d.getMonth()]}</span>`).join("");const msg=dias.length>=3?`<strong>Atención:</strong> llevas <strong>${dias.length} días laborables sin registrar</strong> horas.`:`Tienes <strong>${dias.length} día${dias.length>1?"s":""} laborable${dias.length>1?"s":""}</strong> sin registrar.`;sec.innerHTML=`<div class="pending-days"><h3>Días pendientes</h3><p>${msg}</p><div class="days-list">${chips}</div></div>`;}
-async function iniciarSesion(){const btn=document.getElementById("btn-login");const err=document.getElementById("login-error");btn.disabled=true;btn.textContent="Conectando...";err.style.display="none";try{await msalInstance.initialize();const resp=await msalInstance.loginPopup({scopes:SCOPES});await arrancarApp(resp.account);}catch(e){btn.disabled=false;btn.textContent="Iniciar sesión con Microsoft";err.style.display="block";err.textContent="Error: "+e.message;}}
-async function arrancarApp(account){currentUser=account;const email=currentUser.username.toLowerCase();const nombre=EMAILS_ABOGADOS[email]||currentUser.name||currentUser.username;currentUser.nombreDespacho=nombre;document.getElementById("topbar-user").textContent=nombre;document.getElementById("login-screen").style.display="none";document.getElementById("loading-screen").style.display="flex";document.getElementById("loading-text").textContent="Comprobando días registrados...";const token=await getToken();const fechas=await leerFechas(token,nombre);const pendientes=diasPendientes(fechas);document.getElementById("loading-screen").style.display="none";document.getElementById("app-screen").style.display="block";const hoy=new Date();const DD=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];const MM2=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];document.getElementById("day-header").innerHTML=`<strong>${DD[hoy.getDay()]}, ${hoy.getDate()} de ${MM2[hoy.getMonth()]} de ${hoy.getFullYear()}</strong> · ${nombre} · ${getTarifa(null,nombre)} €/h`;mostrarPendientes(pendientes);render();}
-async function cargarHoras(){const btn=document.getElementById("btn-cargar");btn.disabled=true;btn.textContent="⏳ Leyendo emails y calendario...";try{const token=await getToken();const fechaInput=document.getElementById("fecha-cargar").value;const hoy=new Date();const fechaBase=fechaInput?new Date(fechaInput+"T12:00:00"):hoy;const fechaISO=fechaBase.toISOString().split("T")[0];const ini=fechaISO+"T00:00:00Z";const fin=fechaISO+"T23:59:59Z";const[rE,rC]=await Promise.all([fetch(`https://graph.microsoft.com/v1.0/me/mailFolders/SentItems/messages?$filter=sentDateTime ge ${ini} and sentDateTime le ${fin}&$select=subject,toRecipients,ccRecipients,sentDateTime,bodyPreview,hasAttachments&$top=50&$orderby=sentDateTime asc`,{headers:{Authorization:`Bearer ${token}`}}),fetch(`https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${ini}&endDateTime=${fin}&$select=subject,attendees,start,end,showAs,isCancelled`,{headers:{Authorization:`Bearer ${token}`}})]);const emails=(await rE.json()).value||[];const eventos=((await rC.json()).value||[]).filter(e=>!e.isCancelled&&e.showAs!=="free");dataBloques.forEach(b=>b.rows=[]);const hilos={};for(const em of emails){const asunto=limpiarAsunto(em.subject||"");const dests=[...(em.toRecipients||[]).map(r=>r.emailAddress),...(em.ccRecipients||[]).map(r=>r.emailAddress)];const soloInterno=dests.every(r=>(r.address||"").includes("ugarterebolloabogados.com"));let cliente=soloInterno?"Interno":(clienteFromRecipients(dests,asunto)||"— pendiente —");const key=asunto+"|||"+cliente;if(!hilos[key])hilos[key]={asunto,cliente,emails:[],hasAttachment:false,dests:[]};hilos[key].emails.push(em);if(em.hasAttachments)hilos[key].hasAttachment=true;hilos[key].dests.push(...dests.map(r=>r.address||r));}for(const h of Object.values(hilos)){const n=h.emails.length;const last=h.emails[n-1];const mins=estimarMinutos(last.bodyPreview,h.hasAttachment);const destExt=h.dests.filter(d=>d&&!d.includes("ugarterebolloabogados.com")).slice(0,2).map(d=>{const parts=d.split("@");return parts[0].replace(/[._]/g," ");}).join(", ");const extracto=last.bodyPreview?(last.bodyPreview.substring(0,80).replace(/\r?\n/g," ").trim()+(last.bodyPreview.length>80?"...":"")):"";"";const desc=`${h.asunto} (${n} email${n>1?"s":""})${destExt?" → "+destExt:""}${extracto?" — "+extracto:""}`;const esIg=IGUALAS.has(h.cliente);const esInt=h.cliente==="Interno";const esPend=h.cliente==="— pendiente —";const bid=esIg?"b2":(esInt||esPend)?"b3":"b1";dataBloques.find(x=>x.bid===bid).rows.push({id:"e"+rc++,c:h.cliente,t:TAREAS[3],m:mins,d:desc,p:esPend,cal:false});}for(const ev of eventos){const asunto=ev.subject||"Reunión";const ini_e=new Date(ev.start.dateTime||ev.start);const fin_e=new Date(ev.end.dateTime||ev.end);const dur=Math.round((fin_e-ini_e)/60000);const atts=(ev.attendees||[]).map(a=>a.emailAddress||a);const cliente=clienteFromRecipients(atts,asunto)||"— pendiente —";dataBloques.find(x=>x.bid==="b3").rows.push({id:"e"+rc++,c:cliente,t:TAREAS[2],m:dur,d:asunto+" — Teams/presencial",p:cliente==="— pendiente —",cal:true});}render();btn.textContent="📥 Cargar mis horas";btn.disabled=false;const total=dataBloques.flatMap(b=>b.rows).length;const alertas=[];if(total===0)alertas.push(`<div class="alert">No se encontraron emails. Añade filas manualmente.</div>`);if(fechaInput){const fechaObj=new Date(fechaInput+"T12:00:00");const DD=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];const MM=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];alertas.push(`<div class="alert">Cargando horas del <strong>${DD[fechaObj.getDay()]} ${fechaObj.getDate()} de ${MM[fechaObj.getMonth()]}</strong>. Recuerda que se guardarán con esa fecha.</div>`);}document.getElementById("top-alerts").innerHTML=alertas.join("");}catch(e){btn.disabled=false;btn.textContent="📥 Cargar mis horas";document.getElementById("top-alerts").innerHTML=`<div class="alert-danger">Error: ${e.message}</div>`;}}
-function rowsHtml(bid,rows){return rows.map(r=>{const pc=r.p?"pending":"";const badge=r.p?`<span class="badge-p">pendiente</span>`:"";const calb=r.cal?`<span class="badge-cal">calendario</span>`:"";return `<tr class="row-main ${pc}" id="rm-${r.id}"><td><select onchange="onC('${bid}','${r.id}',this.value)">${cOpts(r.c)}</select>${badge}${calb}</td><td><select onchange="refresh()">${tOpts(r.t)}</select></td><td><input type="number" min="0" max="600" step="5" value="${r.m}" oninput="refresh()"></td><td></td><td><button class="del-btn" onclick="delRow('${bid}','${r.id}')">×</button></td></tr><tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="4" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;}).join("");}
-function blockHtml(b){return `<div class="block"><div class="block-header"><span class="block-title" style="color:${b.color}">${b.label}</span><span class="block-mins" id="bm-${b.bid}"></span></div><table><colgroup><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup><thead><tr><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead><tbody id="tb-${b.bid}">${rowsHtml(b.bid,b.rows)}</tbody></table><button class="add-btn" onclick="addRow('${b.bid}')">+ Añadir fila</button></div>`;}
-function render(){document.getElementById("blocks").innerHTML=dataBloques.map(blockHtml).join("");const p=dataBloques.flatMap(b=>b.rows).filter(r=>r.p).length;document.getElementById("top-alerts").innerHTML=p>0?`<div class="alert">${p} entrada${p>1?"s":""} marcadas como <strong>pendiente</strong> requieren asignación de cliente.</div>`:"";refresh();}
-function getMins(bid){const tb=document.getElementById("tb-"+bid);if(!tb)return 0;return Array.from(tb.querySelectorAll("input[type=number]")).reduce((s,i)=>s+(parseInt(i.value)||0),0);}
-function refresh(){dataBloques.forEach(b=>{const m=getMins(b.bid);const el=document.getElementById("bm-"+b.bid);if(el)el.innerHTML=`<b>${Math.floor(m/60)}h ${m%60}min</b>`;});const map={};dataBloques.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const c=tr.querySelector("select").value;const m=parseInt(tr.querySelector("input[type=number]").value)||0;map[c]=(map[c]||0)+m;});});const total=Object.values(map).reduce((s,v)=>s+v,0);let html=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,m])=>`<div class="sum-row"><span>${c}</span><span>${Math.floor(m/60)}h ${m%60}min</span></div>`).join("");html+=`<div class="sum-row"><span>Total</span><span>${Math.floor(total/60)}h ${total%60}min</span></div>`;document.getElementById("sum-rows").innerHTML=html;}
-function onC(bid,rid,val){const b=dataBloques.find(x=>x.bid===bid);if(!b)return;const r=b.rows.find(x=>x.id===rid);if(!r)return;if(val==="__manual__"){const nombre=prompt("Nombre del cliente:");if(nombre&&nombre.trim()){val=nombre.trim();}else{const sel=document.querySelector(`#rm-${rid} select`);if(sel)sel.value=r.c;return;}}r.c=val;r.p=(val==="— pendiente —");["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");});const sel=document.querySelector(`#rm-${rid} select`);if(sel){const exists=[...sel.options].some(o=>o.value===val);if(!exists){const opt=document.createElement("option");opt.value=val;opt.text=val;opt.selected=true;sel.insertBefore(opt,sel.firstChild);}}const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display=r.p?"":"none";refresh();}
-function delRow(bid,rid){const b=dataBloques.find(x=>x.bid===bid);if(!b)return;b.rows=b.rows.filter(x=>x.id!==rid);["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(el)el.remove();});refresh();}
-function addRow(bid){const b=dataBloques.find(x=>x.bid===bid);if(!b)return;const id="e"+rc++;const nr={id,c:"— pendiente —",t:TAREAS[3],m:0,d:"",p:true,cal:false};b.rows.push(nr);const tb=document.getElementById("tb-"+bid);const tmp=document.createElement("tbody");tmp.innerHTML=rowsHtml(bid,[nr]);Array.from(tmp.children).forEach(tr=>tb.appendChild(tr));refresh();}
-function getRows(){const rows=[];dataBloques.forEach(b=>{const tb=document.getElementById("tb-"+b.bid);if(!tb)return;Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");const rdesc=tr.nextElementSibling;const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";rows.push({cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});});});return rows;}
-function abrirResumen(){const rows=getRows();const sinMin=rows.filter(r=>r.minutos===0);const sinC=rows.filter(r=>r.cliente==="— pendiente —"&&r.minutos>0);const fact=rows.filter(r=>r.minutos>0&&r.cliente!=="Interno"&&r.cliente!=="— pendiente —"&&!IGUALAS.has(r.cliente));const ig=rows.filter(r=>r.minutos>0&&IGUALAS.has(r.cliente));const otros=rows.filter(r=>r.minutos>0&&r.cliente==="Interno");function grp(arr){const m={};arr.forEach(r=>{m[r.cliente]=(m[r.cliente]||0)+r.minutos;});return m;}const fg=grp(fact),ig2=grp(ig),og=grp(otros);const ab=currentUser?currentUser.nombreDespacho:"—";let ftotal=0;let fhtml=Object.entries(fg).map(([c,m])=>{const t=getTarifa(c,ab),imp=(m/60)*t;ftotal+=imp;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;color:#888">${t}€/h</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");if(fhtml)fhtml+=`<tr class="total-row"><td colspan="3">Total facturable</td><td style="text-align:right">${Math.round(ftotal).toLocaleString("es-ES")}€</td></tr>`;const ihtml=Object.entries(ig2).map(([c,m])=>{const t=getTarifa(null,ab),imp=(m/60)*t;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");const ohtml=Object.entries(og).map(([c,m])=>`<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td></tr>`).join("");let warns="";if(sinMin.length)warns+=`<div class="alert">${sinMin.length} entrada${sinMin.length>1?"s":""} con 0 minutos.</div>`;if(sinC.length)warns+=`<div class="alert">${sinC.length} entrada${sinC.length>1?"s":""} sin cliente.</div>`;const fechaMostrar=new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"});document.getElementById("modal").innerHTML=`${warns}<h2>Resumen — ${fechaMostrar}</h2><div class="msec-title">Honorarios facturables</div><table>${fhtml||"<tr><td style='color:#888'>Sin entradas facturables</td></tr>"}</table>${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}<div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div><button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button><button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;document.getElementById("overlay").style.display="flex";}
-async function guardarEnSharePoint(){const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;try{const token=await getToken();const rows=getRows().filter(r=>r.minutos>0&&r.cliente!=="— pendiente —");const fechaInput=document.getElementById("fecha-cargar").value;const fecha=fechaInput||new Date().toISOString().split("T")[0];const ab=currentUser.nombreDespacho;let ok=0,fail=0;for(const r of rows){const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;const iguala=IGUALAS.has(r.cliente)?"Sí":"No";const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,iguala,"No",""]]};const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${ITEM_ID}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});if(resp.ok)ok++;else{fail++;console.error(await resp.json());}}if(fail===0){document.getElementById("modal").innerHTML=`<div class="alert-success"><strong>${ok} fila${ok>1?"s":""} guardada${ok>1?"s":""} en SharePoint.</strong><br><span style="font-size:11px;margin-top:4px;display:block">UR_Registro_Horas_v2_2.xlsx · ${fecha}</span></div><button class="modal-btn-sec" onclick="cerrarYBloquear()">Cerrar</button>`;}else{document.getElementById("modal").innerHTML=`<div class="alert-danger">${ok} filas guardadas, ${fail} con error.</div><button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar</button>`;}}catch(e){btn.disabled=false;btn.innerHTML="Guardar en SharePoint";document.getElementById("modal").insertAdjacentHTML("afterbegin",`<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);}}
-function cerrarYBloquear(){document.getElementById("overlay").style.display="none";const cb=document.getElementById("btn-confirm");cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";dataBloques.forEach(b=>b.rows=[]);render();}
-window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();const accounts=msalInstance.getAllAccounts();if(accounts.length>0){await arrancarApp(accounts[0]);}}catch(e){console.error(e);}});
+function cOpts(sel){return CLIENTES.map(c=>`<option value="${c}"${sel===c?" selected":""}>${c}</option>`).join("")}
+function tOpts(sel){return TAREAS.map(t=>`<option value="${t}"${sel===t?" selected":""}>${t}</option>`).join("")}
+function rowsHtml(rows){
+  return rows.map(r=>{
+    const pc=r.p?"pending":"";const badge=r.p?`<span class="badge-p">pendiente</span>`:"";
+    return `<tr class="row-main ${pc}" id="rm-${r.id}"><td><select onchange="onC('${r.id}',this.value)">${cOpts(r.c)}</select>${badge}</td><td><select onchange="refresh()">${tOpts(r.t)}</select></td><td><input type="number" min="0" max="600" value="${r.m}" oninput="refresh()"></td><td></td><td><button class="del-btn" onclick="delRow('${r.id}')">×</button></td></tr>
+    <tr class="row-desc ${pc}" id="rd-${r.id}"><td colspan="4" style="padding:0 8px 6px"><textarea class="desc-input" rows="2">${r.d}</textarea></td><td></td></tr>`;
+  }).join("");
+}
+function render(){
+  document.getElementById("blocks").innerHTML=`<div class="block"><div class="block-header"><span class="block-title">Entradas del día</span><span class="block-mins" id="bm-total"></span></div>
+  <table><colgroup><col class="tc"><col class="tt"><col class="tm"><col class="td"><col class="tx"></colgroup>
+  <thead><tr><th>Cliente</th><th>Tarea</th><th style="text-align:center">Min</th><th>Descripción</th><th></th></tr></thead>
+  <tbody id="tb-main">${rowsHtml(entries)}</tbody></table>
+  <button class="add-btn" onclick="addRow()">+ Añadir fila</button></div>`;
+  const p=entries.filter(r=>r.p).length;
+  document.getElementById("top-alerts").innerHTML=p>0?`<div class="alert">${p} entrada${p>1?"s":""} marcada${p>1?"s":""} como <strong>${PEND}</strong> requieren asignación de cliente.</div>`:"";
+  refresh();
+}
+function refresh(){
+  const tb=document.getElementById("tb-main");if(!tb)return;
+  const map={};
+  Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const c=tr.querySelector("select").value;const m=parseInt(tr.querySelector("input[type=number]").value)||0;map[c]=(map[c]||0)+m;});
+  const total=Object.values(map).reduce((s,v)=>s+v,0);
+  const bm=document.getElementById("bm-total");if(bm)bm.innerHTML=`<b>${Math.floor(total/60)}h ${total%60}min</b>`;
+  let html=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,m])=>`<div class="sum-row"><span>${c}</span><span>${Math.floor(m/60)}h ${m%60}min</span></div>`).join("");
+  html+=`<div class="sum-row"><span>Total</span><span>${Math.floor(total/60)}h ${total%60}min</span></div>`;
+  document.getElementById("sum-rows").innerHTML=html;
+}
+function onC(rid,val){
+  const r=entries.find(x=>x.id===rid);if(!r)return;
+  r.c=val;r.p=(val===PEND);
+  ["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(!el)return;el.className=el.className.replace(/\bpending\b/g,"").trim()+(r.p?" pending":"");});
+  const badge=document.getElementById("rm-"+rid)?.querySelector(".badge-p");if(badge)badge.style.display=r.p?"":"none";refresh();
+}
+function delRow(rid){entries=entries.filter(x=>x.id!==rid);["rm-","rd-"].forEach(p=>{const el=document.getElementById(p+rid);if(el)el.remove();});refresh();}
+function addRow(){const id="e"+rc++;const nr={id,c:PEND,t:tareaDefecto(false),m:0,d:"",p:true};entries.push(nr);const tb=document.getElementById("tb-main");const tmp=document.createElement("tbody");tmp.innerHTML=rowsHtml([nr]);Array.from(tmp.children).forEach(tr=>tb.appendChild(tr));refresh();}
+function getRows(){
+  const rows=[];const tb=document.getElementById("tb-main");if(!tb)return rows;
+  Array.from(tb.querySelectorAll("tr.row-main")).forEach(tr=>{const sels=tr.querySelectorAll("select");const inp=tr.querySelector("input[type=number]");const rdesc=tr.nextElementSibling;const desc=rdesc?rdesc.querySelector("textarea")?.value||"":"";rows.push({cliente:sels[0].value,tarea:sels[1].value,minutos:parseInt(inp.value)||0,descripcion:desc});});
+  return rows;
+}
+function abrirResumen(){
+  const rows=getRows();
+  const sinMin=rows.filter(r=>r.minutos===0);const sinC=rows.filter(r=>r.cliente===PEND&&r.minutos>0);
+  const fact=rows.filter(r=>r.minutos>0&&r.cliente!=="Interno"&&r.cliente!==PEND&&!IGUALAS.has(r.cliente));
+  const ig=rows.filter(r=>r.minutos>0&&IGUALAS.has(r.cliente));const otros=rows.filter(r=>r.minutos>0&&r.cliente==="Interno");
+  function grp(arr){const m={};arr.forEach(r=>{m[r.cliente]=(m[r.cliente]||0)+r.minutos;});return m;}
+  const fg=grp(fact),ig2=grp(ig),og=grp(otros);const ab=currentUser?currentUser.nombreDespacho:"—";
+  let ftotal=0;
+  let fhtml=Object.entries(fg).map(([c,m])=>{const t=getTarifa(c,ab),imp=(m/60)*t;ftotal+=imp;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;color:#888">${t}€/h</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
+  fhtml+=`<tr class="total-row"><td colspan="3">Total facturable</td><td style="text-align:right">${Math.round(ftotal).toLocaleString("es-ES")}€</td></tr>`;
+  const ihtml=Object.entries(ig2).map(([c,m])=>{const t=getTarifa(null,ab),imp=(m/60)*t;return `<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td><td style="text-align:right;font-weight:500">${Math.round(imp).toLocaleString("es-ES")}€</td></tr>`;}).join("");
+  const ohtml=Object.entries(og).map(([c,m])=>`<tr><td>${c}</td><td style="text-align:right">${Math.floor(m/60)}h ${m%60}min</td></tr>`).join("");
+  let warns="";if(sinMin.length)warns+=`<div class="alert">Tienes ${sinMin.length} entrada${sinMin.length>1?"s":""} sin minutos asignados — revísalas antes de confirmar para no perder horas facturables.</div>`;if(sinC.length)warns+=`<div class="alert">${sinC.length} entrada${sinC.length>1?"s":""} sin cliente.</div>`;
+  document.getElementById("modal").innerHTML=`${warns}<h2>Resumen — ${new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</h2>
+  <div class="msec-title">Honorarios facturables</div><table>${fhtml||"<tr><td style='color:#888'>Sin entradas facturables</td></tr>"}</table>
+  ${ihtml?`<div class="msec-title">Valor interno igualas</div><table>${ihtml}</table>`:""}${ohtml?`<div class="msec-title">Otros</div><table>${ohtml}</table>`:""}
+  <div class="impact">Hoy has generado <strong>${Math.round(ftotal).toLocaleString("es-ES")} €</strong> en honorarios facturables. Cada hora no registrada representa <strong>${getTarifa(null,ab)} €</strong> que el despacho no puede facturar.</div>
+  <button class="modal-btn" id="btn-sp" onclick="guardarEnSharePoint()">Guardar en SharePoint</button>
+  <button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar sin guardar</button>`;
+  document.getElementById("overlay").style.display="flex";
+}
+async function guardarEnSharePoint(){
+  const btn=document.getElementById("btn-sp");btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>Guardando...`;
+  try{
+    const token=await getToken();
+    const r1=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/Documentos%20compartidos/Gesti%C3%B3n%20del%20conocimiento/Claude%20Time%20Report/UR_Registro_Horas_v2_2.xlsx`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r1.ok)throw new Error(`No se pudo acceder al archivo (${r1.status}). Verifica que existe en SharePoint.`);
+    const item=await r1.json();const itemId=item.id;
+    const rows=getRows().filter(r=>r.minutos>0&&r.cliente!==PEND);
+    const fecha=new Date().toISOString().split("T")[0];const ab=currentUser.nombreDespacho;
+    let ok=0,fail=0;
+    for(const r of rows){
+      const t=getTarifa(r.cliente,ab);const imp=Math.round((r.minutos/60)*t*100)/100;
+      const body={values:[[fecha,ab,r.cliente,r.tarea,r.descripcion,r.minutos,t,imp,"No"]]};
+      const resp=await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/tables/${TABLE_NAME}/rows`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(resp.ok)ok++;else{fail++;console.error(await resp.json());}
+    }
+    if(fail===0){
+      document.getElementById("modal").innerHTML=`<div class="alert-success"><strong>${ok} fila${ok>1?"s":""} guardada${ok>1?"s":""} correctamente en SharePoint.</strong><br><span style="font-size:11px;margin-top:4px;display:block">Registradas en UR_Registro_Horas_v2_2.xlsx</span></div><button class="modal-btn-sec" onclick="cerrarYBloquear()">Cerrar</button>`;
+    }else{
+      document.getElementById("modal").innerHTML=`<div class="alert-danger">${ok} filas guardadas, ${fail} con error. Pulsa F12 para detalles.</div><button class="modal-btn-sec" onclick="document.getElementById('overlay').style.display='none'">Cerrar</button>`;
+    }
+  }catch(e){btn.disabled=false;btn.innerHTML="Guardar en SharePoint";document.getElementById("modal").insertAdjacentHTML("afterbegin",`<div class="alert-danger" style="margin-bottom:8px">Error: ${e.message}</div>`);}
+}
+function cerrarYBloquear(){document.getElementById("overlay").style.display="none";const cb=document.getElementById("btn-confirm");cb.disabled=true;cb.textContent="Horas confirmadas y guardadas ✓";}
+window.addEventListener("load",async()=>{try{await msalInstance.initialize();await msalInstance.handleRedirectPromise();}catch(e){}});
 </script>
 </body>
 </html>
